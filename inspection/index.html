@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>미검·과검 자동 분석기</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#16212b;--mut:#5d6c7b;--line:#dce2e9;--under:#b3261e;--over:#1d68ab;--ok:#1b7a4b;--warn:#fff3cf;--soft:#eef2f6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f151b;--card:#17202a;--ink:#e7edf3;--mut:#93a3b3;--line:#2a3845;--under:#ff8078;--over:#72b6f2;--ok:#4cc38a;--warn:#3a3217;--soft:#1f2b37}}
+:root[data-theme="dark"]{--bg:#0f151b;--card:#17202a;--ink:#e7edf3;--mut:#93a3b3;--line:#2a3845;--under:#ff8078;--over:#72b6f2;--ok:#4cc38a;--warn:#3a3217;--soft:#1f2b37}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:22px 16px 48px}
+h1{font-size:24px;margin:0 0 4px;letter-spacing:-.01em}h2{font-size:16px;margin:0 0 10px}
+.mut{color:var(--mut);font-size:13px;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:14px}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:26px 14px;text-align:center;cursor:pointer;background:var(--soft)}
+.drop.on{border-color:var(--over)}
+.drop b{display:block;font-size:16px;margin-bottom:4px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+label{font-size:13px;color:var(--mut);display:inline-flex;gap:6px;align-items:center}
+select,input[type=number],button{font:inherit;font-size:13px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:7px;padding:6px 9px}
+input[type=number]{width:66px}button{cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,.drop:focus-visible{outline:2px solid var(--over);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.k span{font-size:12px;color:var(--mut)}.k strong{display:block;font-size:24px;line-height:1.25;font-variant-numeric:tabular-nums}
+.k small{color:var(--mut);font-size:12px}
+.u{color:var(--under)}.o{color:var(--over)}.g{color:var(--ok)}
+.ins{margin:0;padding-left:18px}.ins li{margin:4px 0}
+.warnbox{background:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px;margin-top:10px}
+.scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{color:var(--mut);font-weight:600;background:var(--soft)}
+th:nth-child(-n+3),td:nth-child(-n+3),td.nt,th.nt{text-align:left}
+td.bad{font-weight:700;background:var(--warn)}tfoot td{font-weight:700}
+.lg{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-bottom:6px}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+svg text{fill:var(--mut);font-size:11px}
+details{margin-top:12px}summary{cursor:pointer;font-weight:600}
+code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:12px}
+</style>
+
+<style id="cloud-style">
+#cloud-panel .cloud-cols{display:grid;grid-template-columns:minmax(250px,1fr) minmax(270px,1fr);gap:14px}
+#cloud-panel .cloud-form{display:grid;gap:9px}
+#cloud-panel input[type=email],#cloud-panel input[type=password],#cloud-panel input[type=text]{font:inherit;font-size:14px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:7px;padding:9px;min-width:0;width:100%;box-sizing:border-box}
+#cloud-panel .cloud-buttons{display:flex;gap:8px;flex-wrap:wrap}
+#cloud-panel .cloud-buttons button{padding:9px 12px}
+#cloud-panel button.primary{background:var(--over);border-color:var(--over);color:#fff;font-weight:600}
+#cloud-panel button:disabled{opacity:.5;cursor:not-allowed}
+#cloud-panel .cloud-note{font-size:12px;color:var(--mut)}
+#cloud-panel .history-item{padding:10px 0;border-bottom:1px solid var(--line)}
+#cloud-panel .history-item .cloud-buttons{margin-top:5px}
+#cloud-panel #cloud-msg{padding-top:6px;min-height:20px;white-space:pre-wrap}
+@media(max-width:720px){#cloud-panel .cloud-cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>미검 · 과검 자동 분석기</h1>
+<p class="mut">엑셀 양식이 달라도 괜찮습니다. 투입수량, total, 미검(underkill), 과검(overkill) 같은 단어를 찾아 자동으로 집계합니다.</p>
+
+<section class="card">
+  <div class="drop" id="drop" tabindex="0" role="button" aria-label="엑셀 파일 선택">
+    <b>엑셀 파일을 끌어다 놓거나 눌러서 선택</b>
+    <span class="mut">.xlsx · .xls · .xlsm · .csv, 여러 파일 동시 가능 · 파일은 이 브라우저 안에서만 처리됩니다</span>
+    <input id="file" type="file" multiple accept=".xlsx,.xls,.xlsm,.csv,.tsv" hidden>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <label>연도 없는 날짜(23-Sep)에 적용할 연도 <input id="year" type="number" value="2026" min="1990" max="2100"></label>
+    <label><input id="hid" type="checkbox"> 숨김 시트 포함</label>
+    <label>미검률 기준 <input id="tu" type="number" value="1" min="0" step="0.1">%</label>
+    <label>과검률 기준 <input id="to" type="number" value="5" min="0" step="0.1">%</label>
+  </div>
+  <div id="status" class="mut" role="status" style="margin-top:10px"></div>
+  <details>
+    <summary>인식하는 단어</summary>
+    <p class="mut" style="margin-top:8px"><b>투입</b>: 투입, 투입수량, total, total samples, 총수량, 검사수량 · <b class="u">미검</b>: 미검, 미검출, underkill, false OK, missed · <b class="o">과검</b>: 과검, 과검출, overkill, false NG, 오검 · <b>정상</b>: correct judgment, 정상, 양품 · <b>오류 합계</b>: overall, 오판. 열 제목(표 형식)과 행 제목(양식 형식) 모두 인식하고, 날짜·모델·라인은 <code>Date check : 23-Sep</code> 같은 줄이나 열 제목에서 읽습니다.</p>
+  </details>
+</section>
+
+<div id="out" hidden>
+  <div class="kpis" id="kpis"></div>
+  <section class="card"><h2>자동 분석 요약</h2><ul class="ins" id="ins"></ul><div id="wb"></div></section>
+  <section class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <h2 style="margin:0">비교 차트</h2>
+      <div class="row">
+        <label>묶음 <select id="gb"><option value="each">건별(날짜·모델·라인)</option><option value="date">날짜별</option><option value="model">모델별</option><option value="line">라인별</option></select></label>
+        <label>표시 <select id="md"><option value="rate">비율(%)</option><option value="qty">수량(건)</option></select></label>
+        <label>모델 <select id="fm"><option value="">전체</option></select></label>
+        <label>라인 <select id="fl"><option value="">전체</option></select></label>
+      </div>
+    </div>
+    <div class="lg"><span><i style="background:var(--under)"></i>미검</span><span><i style="background:var(--over)"></i>과검</span><span>점선: 기준선</span></div>
+    <div class="scroll" id="chart"></div>
+  </section>
+  <section class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">상세 집계</h2><button id="copy">표 복사 (엑셀에 붙여넣기)</button></div>
+    <div class="scroll"><table id="tbl"></table></div>
+    <p class="mut" style="margin-top:8px">행 위에 마우스를 올리면 인식한 파일·시트와 근거 단어가 보입니다. 기준을 넘는 비율은 강조됩니다.</p>
+  </section>
+</div>
+
+<section class="card" id="cloud-panel" aria-labelledby="cloud-heading">
+  <h2 id="cloud-heading">Supabase 클라우드 · 분석 이력</h2>
+  <p class="mut">엑셀 파일은 브라우저에서 처리됩니다. <b>분석 이력 저장</b>을 누를 때만 파일명·날짜·모델·라인·집계 결과를 계정에 저장하며, 원본 엑셀 파일은 업로드하지 않습니다.</p>
+  <div class="cloud-cols" style="margin-top:12px">
+    <section>
+      <h2>계정</h2>
+      <div id="cloud-login" class="cloud-form">
+        <input id="cloud-email" type="email" autocomplete="username" placeholder="이메일 주소" aria-label="이메일 주소">
+        <input id="cloud-password" type="password" autocomplete="current-password" placeholder="비밀번호 (6자 이상)" aria-label="비밀번호">
+        <div class="cloud-buttons">
+          <button type="button" class="primary" id="cloud-signin">로그인</button>
+          <button type="button" id="cloud-signup">회원가입</button>
+        </div>
+        <span class="cloud-note">회원가입 후 인증 메일이 도착하면 확인하고 로그인하세요.</span>
+      </div>
+      <div id="cloud-signed" hidden>
+        <p class="mut">로그인 계정: <b id="cloud-user"></b></p>
+        <button id="cloud-signout" type="button" style="margin-top:8px">로그아웃</button>
+      </div>
+      <p id="cloud-msg" class="mut" role="status" aria-live="polite"></p>
+    </section>
+    <section>
+      <h2>분석 결과 저장</h2>
+      <div class="cloud-form">
+        <input id="cloud-title" type="text" maxlength="100" placeholder="이력 이름 (예: 11월 4013 검사 분석)" aria-label="분석 이력 이름">
+        <div class="cloud-buttons">
+          <button type="button" id="cloud-save" class="primary" disabled>현재 분석 결과 저장</button>
+          <button type="button" id="cloud-refresh" disabled>저장 이력 새로고침</button>
+        </div>
+        <span class="cloud-note">현재 모델·라인 필터와 숨김 시트 설정을 적용한 집계 결과를 저장합니다. 다른 사용자는 볼 수 없습니다.</span>
+      </div>
+      <h2 style="margin-top:14px">나의 저장 이력</h2>
+      <div id="cloud-history" class="mut">로그인하면 저장 이력이 표시됩니다.</div>
+    </section>
+  </div>
+</section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+//<logic
+const norm=s=>String(s??'').toLowerCase().normalize('NFKC').replace(/[^a-z0-9가-힣]/g,'');
+// 순서가 중요: "Overall False NG Rate"가 과검으로 오인되지 않도록 오류 합계를 먼저 검사
+const CATS=[['err',/overall|오판|총오류|totalerror|불일치/],
+ ['under',/미검|underkill|falseok|missed|escape|누락/],
+ ['over',/과검|overkill|falseng|오검|falsereject|과잉/],
+ ['correct',/correct|정상|양품|합격|일치/],
+ ['input',/투입|total|총수량|총검사|총수|검사수|검사량|샘플수|전체수량/]];
+const META=[['date',/날짜|일자|검사일|date/],['model',/모델|model|품번|품명|제품|품종|partno/],['line',/라인|호기|line|설비/],['time',/time|시간/]];
+const metaOf=s=>{const n=norm(s);for(const[k,r]of META)if(r.test(n))return k;return null};
+const cls=v=>{if(typeof v!=='string'||v.length>60)return null;const n=norm(v);if(!n)return null;for(const[k,r]of CATS)if(r.test(n))return{k,rate:/rate|률|비율|%/i.test(v)};return null};
+const num=v=>{if(typeof v==='number')return isFinite(v)?v:null;if(v==null)return null;const s=String(v).trim().replace(/,/g,'');return/^-?\d+(\.\d+)?%?$/.test(s)?parseFloat(s):null};
+const isPct=v=>typeof v==='string'&&v.trim().endsWith('%');
+const frac=v=>{const n=num(v);return n==null?null:isPct(v)||n>1?n/100:n};
+const MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+const p2=n=>String(n).padStart(2,'0');
+const yy=y=>+y<100?2000+ +y:+y;
+function pDate(v,Y){
+  if(typeof v==='number'&&v>20000&&v<80000){const d=new Date(Math.round((v-25569)*864e5));return d.getUTCFullYear()+'-'+p2(d.getUTCMonth()+1)+'-'+p2(d.getUTCDate())}
+  const s=String(v??'').trim();if(!s)return'';let m;
+  if(m=s.match(/(\d{4})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})/))return m[1]+'-'+p2(m[2])+'-'+p2(m[3]);
+  if((m=s.match(/(\d{1,2})\s*[-./ ]\s*([A-Za-z]{3})[A-Za-z]*(?:[-./ ,]+(\d{2,4}))?/))&&MON[m[2].toLowerCase()])return(m[3]?yy(m[3]):Y)+'-'+p2(MON[m[2].toLowerCase()])+'-'+p2(m[1]);
+  if((m=s.match(/([A-Za-z]{3})[A-Za-z]*[-./ ]+(\d{1,2})(?:[-./ ,]+(\d{2,4}))?/))&&MON[m[1].toLowerCase()])return(m[3]?yy(m[3]):Y)+'-'+p2(MON[m[1].toLowerCase()])+'-'+p2(m[2]);
+  if(m=s.match(/(\d{1,2})\s*[-./월]\s*(\d{1,2})(?:\s*[-./]\s*(\d{2,4}))?/)){let a=+m[1],b=+m[2];if(a>12){[a,b]=[b,a]}return(m[3]?yy(m[3]):Y)+'-'+p2(a)+'-'+p2(b)}
+  return'';
+}
+// "Date check : 23-Sep" 같은 머리글 정보 수집
+function scanMeta(R){
+  const meta={};
+  for(const row of R.slice(0,40))row.forEach((x,c)=>{
+    if(typeof x!=='string')return;const m=x.match(/^\s*([^:：]{1,30})[:：]\s*(.*)$/);if(!m)return;
+    const k=metaOf(m[1]);if(!k||meta[k]!=null)return;
+    meta[k]=m[2].trim()||String(row.slice(c+1).find(y=>String(y).trim()!=='')??'').trim();
+  });
+  return meta;
+}
+// 숫자 3종(투입·미검·과검)을 한 건의 결과로 정리하고 검산
+function mk(v,meta,s,Y,src){
+  let{input,under,over,correct,err}=v;const notes=[],warn=[];
+  if(over==null&&err!=null&&under!=null){over=err-under;notes.push('과검=오류합계-미검')}
+  if(under==null&&err!=null&&over!=null){under=err-over;notes.push('미검=오류합계-과검')}
+  if(input==null&&correct!=null&&(err!=null||(under!=null&&over!=null))){input=correct+(err??under+over);notes.push('투입=정상+오류')}
+  if(input==null||(under==null&&over==null))return null;
+  if(under==null){under=0;warn.push('미검 항목 없음(0 처리)')}
+  if(over==null){over=0;warn.push('과검 항목 없음(0 처리)')}
+  if(err!=null&&Math.abs(under+over-err)>.5)warn.push('미검+과검≠오류합계');
+  if(correct!=null&&Math.abs(correct+under+over-input)>.5)warn.push('정상+미검+과검≠투입');
+  if(under+over>input)warn.push('오류가 투입수량 초과');
+  return{file:s.file,sheet:s.name,hidden:s.hidden,date:pDate(meta.date,Y),model:String(meta.model??'').trim()||'미지정',line:String(meta.line??'').trim()||'—',time:String(meta.time??'').trim(),input,under,over,correct,notes,warn,src,dup:false};
+}
+function parseSheet(s,Y){
+  const R=s.rows.map(r=>Array.isArray(r)?r:[]),sm=scanMeta(R),out=[];
+  let hr=-1;
+  for(let r=0;r<Math.min(R.length,40)&&hr<0;r++)if(new Set(R[r].map(cls).filter(Boolean).map(o=>o.k)).size>=2)hr=r;
+  if(hr>=0){ // 표 형식: 열 제목으로 인식
+    const col={},rc={},lab={};
+    R[hr].forEach((v,c)=>{const k=cls(v);if(k){const t=k.rate?rc:col;if(t[k.k]==null){t[k.k]=c;lab[k.k]=String(v).trim()}}else if(typeof v==='string'&&v.length<30){const m=metaOf(v);if(m&&col[m]==null)col[m]=c}});
+    const last={};
+    for(let r=hr+1;r<R.length;r++){
+      const row=R[r];if(!row.some(x=>String(x).trim()!==''))continue;
+      const f=row.filter(x=>typeof x==='string'&&x.trim()).slice(0,3).map(norm);
+      if(f.some(t=>/^(합계|소계|총계|계$|total$|sum|subtotal|grandtotal|평균|average)/.test(t)))continue; // 합계행 이중집계 방지
+      const g=k=>col[k]!=null?num(row[col[k]]):null,v={input:g('input'),under:g('under'),over:g('over'),correct:g('correct'),err:g('err')};
+      if(Object.values(v).every(x=>x==null))continue;
+      for(const k of['date','model','line','time'])if(col[k]!=null&&String(row[col[k]]).trim()!=='')last[k]=row[col[k]];
+      const meta={...sm,...last};
+      for(const k of['under','over'])if(v[k]==null&&rc[k]!=null&&v.input!=null){const q=frac(row[rc[k]]);if(q!=null)v[k]=Math.round(q*v.input)}
+      const rec=mk(v,meta,s,Y,Object.entries(lab).map(([k,t])=>k+'='+t).join(', ')+' (표 '+(r+1)+'행)');
+      if(rec)out.push(rec);
+    }
+    return out;
+  }
+  // 양식 형식: 행 제목 오른쪽의 숫자를 값으로 사용
+  let qc=-1;
+  for(const row of R.slice(0,40)){const c=row.findIndex(x=>/^(qty|수량|건수|count)$/i.test(String(x).trim()));if(c>=0){qc=c;break}}
+  let cur={},src=[];
+  const flush=()=>{if(Object.keys(cur).length){const rec=mk(cur,sm,s,Y,src.join(', '));if(rec)out.push(rec)}cur={};src=[]};
+  R.forEach((row,r)=>row.forEach((x,c)=>{
+    if(/[:：]/.test(String(x))&&metaOf(String(x).split(/[:：]/)[0]))return;
+    const k=cls(x);if(!k)return;let val=null;
+    if(qc>c){const n=num(row[qc]);if(n!=null&&!isPct(row[qc]))val=n}
+    if(val==null)for(const y of row.slice(c+1)){const n=num(y);if(n!=null&&!isPct(y)){val=n;break}}
+    if(val==null)return;
+    if(cur[k.k]!=null)flush();
+    cur[k.k]=val;src.push(k.k+'="'+String(x).split('/')[0].trim()+'"('+(r+1)+'행)');
+  }));
+  flush();return out;
+}
+//logic>
+
+let SHEETS=[],REC=[];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>n.toLocaleString('ko-KR');
+const rt=(a,b)=>b?a/b:0;
+const pc=(a,b,d=2)=>b?(a/b*100).toFixed(d)+'%':'—';
+const lab=r=>(r.date?r.date.slice(5):'날짜미상')+' '+r.model+(r.line&&r.line!=='—'?' '+r.line:'');
+
+async function load(files){
+  if(typeof XLSX==='undefined'){$('#status').textContent='엑셀 읽기 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침하세요.';return}
+  SHEETS=[];const bad=[];
+  for(const f of files){
+    try{
+      const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+      wb.SheetNames.forEach((n,i)=>SHEETS.push({file:f.name,name:n,hidden:((wb.Workbook&&wb.Workbook.Sheets&&wb.Workbook.Sheets[i]&&wb.Workbook.Sheets[i].Hidden)||0)>0,rows:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''})}));
+    }catch(e){bad.push(f.name)}
+  }
+  if(bad.length)$('#status').textContent='읽지 못한 파일: '+bad.join(', ');
+  analyze(bad.length?$('#status').textContent:'');
+}
+function analyze(pre){
+  const Y=+$('#year').value||new Date().getFullYear();REC=[];const miss=[];
+  for(const s of SHEETS){const r=parseSheet(s,Y);if(r.length)REC.push(...r);else if(s.rows.some(x=>x.some&&x.some(y=>String(y).trim()!=='')))miss.push(s.name)}
+  REC.sort((a,b)=>a.hidden-b.hidden);const seen=new Set();
+  for(const r of REC){const k=[r.date,r.model,r.line,r.time,r.input,r.under,r.over].join('|');r.dup=seen.has(k);seen.add(k)}
+  const fill=(id,key)=>{const el=$(id),cv=el.value,vs=[...new Set(REC.map(r=>r[key]))].sort();el.innerHTML='<option value="">전체</option>'+vs.map(v=>`<option>${esc(v)}</option>`).join('');el.value=vs.includes(cv)?cv:''};
+  fill('#fm','model');fill('#fl','line');
+  $('#out').hidden=!REC.length;
+  if(!REC.length){$('#status').textContent=(pre?pre+' · ':'')+'투입·미검·과검 단어를 찾지 못했습니다. 시트에 해당 단어(예: 투입수량, 미검, 과검 / total, underkill, overkill)가 있는지 확인하세요.';return}
+  render(miss,pre);
+}
+function render(miss=[],pre=''){
+  const inc=$('#hid').checked,M=$('#fm').value,L=$('#fl').value,gb=$('#gb').value,md=$('#md').value;
+  const thr={u:+$('#tu').value||0,o:+$('#to').value||0};
+  const sel=REC.filter(r=>!r.dup&&(inc||!r.hidden)&&(!M||r.model===M)&&(!L||r.line===L));
+  const dupN=REC.filter(r=>r.dup).length,hidN=inc?0:REC.filter(r=>!r.dup&&r.hidden).length;
+  $('#status').textContent=[pre,`시트 ${SHEETS.length}개에서 ${REC.length}건 인식`,dupN?`중복 ${dupN}건 제외`:'',hidN?`숨김 시트 ${hidN}건 제외`:'',miss.length?`인식 못한 시트: ${miss.slice(0,6).join(', ')}${miss.length>6?' 외':''}`:''].filter(Boolean).join(' · ');
+  const kf={each:null,date:r=>r.date||'날짜 미상',model:r=>r.model,line:r=>r.line}[gb];let G=[];
+  if(!kf)G=sel.map(r=>({label:lab(r),date:r.date,model:r.model,line:r.line,input:r.input,under:r.under,over:r.over,rec:r}));
+  else{const m=new Map();for(const r of sel){const k=kf(r);let g=m.get(k);if(!g)m.set(k,g={label:k,date:gb==='date'?r.date:'',model:gb==='model'?r.model:'',line:gb==='line'?r.line:'',input:0,under:0,over:0,n:0});g.input+=r.input;g.under+=r.under;g.over+=r.over;g.n++}G=[...m.values()]}
+  G.sort((a,b)=>(a.date||'~').localeCompare(b.date||'~')||a.label.localeCompare(b.label));
+  const T=sel.reduce((t,r)=>({input:t.input+r.input,under:t.under+r.under,over:t.over+r.over}),{input:0,under:0,over:0});
+  const acc=T.input-T.under-T.over;
+  $('#kpis').innerHTML=[['총 투입수량',fmt(T.input),`${sel.length}건`,''],['미검 (underkill)',fmt(T.under),pc(T.under,T.input),'u'],['과검 (overkill)',fmt(T.over),pc(T.over,T.input),'o'],['정확도',pc(acc,T.input),`정상 ${fmt(acc)}건`,'g']].map(([a,b,c,k])=>`<div class="k"><span>${a}</span><strong class="${k}">${b}</strong><small>${c}</small></div>`).join('');
+  // 자동 분석 요약
+  const I=[];
+  if(!sel.length)I.push('조건에 맞는 데이터가 없습니다.');
+  else{
+    I.push(`총 ${fmt(T.input)}개 투입 중 미검 ${fmt(T.under)}건(${pc(T.under,T.input)}), 과검 ${fmt(T.over)}건(${pc(T.over,T.input)}), 정확도 ${pc(acc,T.input)}입니다.`);
+    if(T.under+T.over)I.push(`오류 ${fmt(T.under+T.over)}건 중 과검이 ${pc(T.over,T.under+T.over,0)}, 미검이 ${pc(T.under,T.under+T.over,0)}를 차지해 ${T.over>=T.under?'과검':'미검'} 개선이 우선입니다.`);
+    const top=(k)=>sel.slice().sort((a,b)=>rt(b[k],b.input)-rt(a[k],a.input))[0];
+    const tu=top('under'),to=top('over');
+    if(tu.under)I.push(`미검률 최고: ${esc(lab(tu))} ${pc(tu.under,tu.input)} (${tu.under}/${tu.input}건)`);
+    if(to.over)I.push(`과검률 최고: ${esc(lab(to))} ${pc(to.over,to.input)} (${to.over}/${to.input}건)`);
+    const by=(f)=>{const m=new Map();sel.forEach(r=>{const k=f(r);const g=m.get(k)||{input:0,under:0,over:0};g.input+=r.input;g.under+=r.under;g.over+=r.over;m.set(k,g)});return[...m]};
+    const bm=by(r=>r.model);
+    if(bm.length>1){const w=bm.sort((a,b)=>rt(b[1].over,b[1].input)-rt(a[1].over,a[1].input))[0];I.push(`모델 중 과검률이 가장 높은 것은 ${esc(w[0])} (${pc(w[1].over,w[1].input)})입니다.`)}
+    const bd=by(r=>r.date).filter(x=>x[0]).sort((a,b)=>a[0].localeCompare(b[0]));
+    if(bd.length>1){const a=bd[0],b=bd[bd.length-1],d=rt(b[1].over+b[1].under,b[1].input)-rt(a[1].over+a[1].under,a[1].input);I.push(`오류율(미검+과검)은 ${a[0]} ${pc(a[1].over+a[1].under,a[1].input)} → ${b[0]} ${pc(b[1].over+b[1].under,b[1].input)}로 ${d<0?'개선':d>0?'악화':'동일'}되었습니다.`)}
+    const ex=sel.filter(r=>rt(r.under,r.input)*100>thr.u||rt(r.over,r.input)*100>thr.o).length;
+    I.push(`기준(미검 ${thr.u}% · 과검 ${thr.o}%) 초과 건: ${ex}/${sel.length}건`);
+  }
+  $('#ins').innerHTML=I.map(x=>`<li>${x}</li>`).join('');
+  const W=sel.filter(r=>r.warn.length);
+  $('#wb').innerHTML=W.length?`<div class="warnbox"><b>검산 경고 ${W.length}건</b><br>${W.slice(0,8).map(r=>esc(r.sheet+': '+r.warn.join(', '))).join('<br>')}</div>`:'';
+  $('#chart').innerHTML=chart(G,md,thr);
+  const bad=(a,b,t)=>rt(a,b)*100>t?' class="bad"':'';
+  $('#tbl').innerHTML='<thead><tr><th>날짜</th><th>모델</th><th>라인</th><th>투입</th><th>미검</th><th>과검</th><th>미검률</th><th>과검률</th><th>정확도</th><th class="nt">비고</th></tr></thead><tbody>'+
+   G.map(g=>{const r=g.rec,tip=r?`${r.file} › ${r.sheet} | ${r.src}${r.notes.length?' | '+r.notes.join(', '):''}`:`${g.n}건 합산`;
+    return`<tr title="${esc(tip)}"><td>${esc(g.date||(gb==='date'?'날짜 미상':'')||'')}</td><td>${esc(g.model||'')}</td><td>${esc(g.line||'')}</td><td>${fmt(g.input)}</td><td>${fmt(g.under)}</td><td>${fmt(g.over)}</td><td${bad(g.under,g.input,thr.u)}>${pc(g.under,g.input)}</td><td${bad(g.over,g.input,thr.o)}>${pc(g.over,g.input)}</td><td>${pc(g.input-g.under-g.over,g.input)}</td><td class="nt">${r?esc(r.sheet)+(r.warn.length?' ⚠ '+esc(r.warn.join(', ')):''):g.n+'건'}</td></tr>`}).join('')+
+   `</tbody><tfoot><tr><td colspan="3">합계</td><td>${fmt(T.input)}</td><td>${fmt(T.under)}</td><td>${fmt(T.over)}</td><td>${pc(T.under,T.input)}</td><td>${pc(T.over,T.input)}</td><td>${pc(acc,T.input)}</td><td></td></tr></tfoot>`;
+}
+function chart(G,md,thr){
+  if(!G.length)return'<p class="mut">표시할 데이터가 없습니다.</p>';
+  const rate=md==='rate',V=g=>rate?[rt(g.under,g.input)*100,rt(g.over,g.input)*100]:[g.under,g.over];
+  const mx=Math.max(...G.flatMap(V),rate?Math.max(thr.u,thr.o):0,1)*1.15;
+  const n=G.length,W=Math.max(560,n*66+60),H=300,Lm=44,B=84,Tm=14,ph=H-B-Tm,gw=(W-Lm-10)/n,bw=Math.min(22,gw/3),y=v=>Tm+ph-v/mx*ph,f=v=>rate?v.toFixed(1):v;
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="미검·과검 비교 막대 차트">`;
+  for(let i=0;i<=4;i++){const v=mx/1.15*i/4;s+=`<line x1="${Lm}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--line)"/><text x="${Lm-6}" y="${y(v)+4}" text-anchor="end">${rate?v.toFixed(1)+'%':Math.round(v)}</text>`}
+  if(rate)[[thr.u,'--under'],[thr.o,'--over']].forEach(([t,c])=>{if(t>0)s+=`<line x1="${Lm}" x2="${W-6}" y1="${y(t)}" y2="${y(t)}" stroke-dasharray="4 3" style="stroke:var(${c})"/>`});
+  G.forEach((g,i)=>{const cx=Lm+gw*i+gw/2,v=V(g);
+    [[v[0],'--under',cx-bw-1,'미검'],[v[1],'--over',cx+1,'과검']].forEach(([a,c,x,nm])=>{s+=`<rect x="${x}" y="${y(a)}" width="${bw}" height="${Math.max(0,Tm+ph-y(a))}" rx="2" style="fill:var(${c})"><title>${esc(g.label)} ${nm} ${f(a)}${rate?'%':'건'}</title></rect>`;if(a>0)s+=`<text x="${x+bw/2}" y="${y(a)-3}" text-anchor="middle">${f(a)}</text>`});
+    s+=`<text transform="translate(${cx+4},${H-B+12}) rotate(-35)" text-anchor="end">${esc(g.label.length>18?g.label.slice(0,17)+'…':g.label)}</text>`});
+  return s+'</svg>';
+}
+const drop=$('#drop'),inp=$('#file');
+drop.onclick=()=>inp.click();
+drop.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inp.click()}};
+inp.onchange=()=>inp.files.length&&load([...inp.files]);
+['dragover','dragenter'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('on')}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('on')}));
+drop.addEventListener('drop',e=>{if(e.dataTransfer.files.length)load([...e.dataTransfer.files])});
+$('#year').onchange=()=>SHEETS.length&&analyze();
+['#hid','#tu','#to','#gb','#md','#fm','#fl'].forEach(i=>$(i).onchange=()=>REC.length&&render());
+$('#copy').onclick=async()=>{
+  const t=[...document.querySelectorAll('#tbl tr')].map(r=>[...r.children].map(c=>c.innerText).join('\t')).join('\n');
+  try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()}
+  $('#copy').textContent='복사됨';setTimeout(()=>$('#copy').textContent='표 복사 (엑셀에 붙여넣기)',1500);
+};
+</script>
+
+<script id="cloud-logic">
+(function(){
+"use strict";
+const SUPABASE_URL="https://xokpzxuqddgplyleaxtu.supabase.co";
+const SUPABASE_KEY="sb_publishable_PpLBcD8acNraYCtKOFCu3g_3D4PE3DJ";
+const E=id=>document.getElementById(id);
+let client=null, currentUser=null, loading=false;
+function say(s){E("cloud-msg").textContent=s;}
+function busy(v){loading=v;for(const n of ["cloud-signin","cloud-signup","cloud-save","cloud-refresh","cloud-signout"])E(n).disabled=v||(n==="cloud-save"&&(!currentUser||!REC.length))||(n==="cloud-refresh"&&!currentUser);}
+function updateState(){
+ E("cloud-login").hidden=!!currentUser;
+ E("cloud-signed").hidden=!currentUser;
+ E("cloud-user").textContent=currentUser?currentUser.email||"계정":""; 
+ busy(false);
+ if(!currentUser)E("cloud-history").textContent="로그인하면 저장 이력이 표시됩니다.";
+}
+async function auth(action){
+ if(!client){say("연결 라이브러리가 로드되지 않았습니다.");return;}
+ const email=E("cloud-email").value.trim(),password=E("cloud-password").value;
+ if(!email||password.length<6){say("이메일과 6자 이상의 비밀번호를 입력하세요.");return;}
+ busy(true);
+ try{
+  const result=action==="signup"
+   ?await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}})
+   :await client.auth.signInWithPassword({email,password});
+  if(result.error)throw result.error;
+  if(action==="signup"&&!result.data.session)say("인증 메일을 발송했습니다. 이메일 인증 후 이 페이지로 돌아와 로그인하세요. 메일이 오지 않으면 Supabase 이메일 설정을 확인하세요.");
+  else {currentUser=result.data.user||null;updateState();say("로그인되었습니다.");await history();}
+ }catch(err){say("계정 처리 오류: "+err.message);}finally{busy(false);}
+}
+async function history(){
+ if(!client||!currentUser)return;
+ const target=E("cloud-history");target.textContent="이력을 불러오는 중입니다…";
+ try{
+  const {data,error}=await client.from("inspection_analyses").select("id,title,created_at,record_count,input_count,under_count,over_count").order("created_at",{ascending:false}).limit(50);
+  if(error)throw error;
+  if(!data||!data.length){target.textContent="저장된 분석 이력이 없습니다.";return;}
+  target.innerHTML=data.map(row=>{
+   const title=esc(row.title||"제목 없음"),created=new Date(row.created_at).toLocaleString("ko-KR");
+   return '<div class="history-item"><strong>'+title+'</strong><div class="cloud-note">'+esc(created)+' · 투입 '+fmt(Number(row.input_count))+' · 미검 '+fmt(Number(row.under_count))+' · 과검 '+fmt(Number(row.over_count))+' · '+fmt(Number(row.record_count))+'건</div><div class="cloud-buttons"><button type="button" data-act="open" data-id="'+row.id+'">불러오기</button><button type="button" data-act="delete" data-id="'+row.id+'">삭제</button></div></div>';
+  }).join("");
+ }catch(err){target.textContent="이력 조회 실패: "+err.message;}
+}
+function selectedRecords(){
+ const inc=E("hid").checked,M=E("fm").value,L=E("fl").value;
+ return REC.filter(r=>!r.dup&&(inc||!r.hidden)&&(!M||r.model===M)&&(!L||r.line===L))
+ .map(r=>({file:String(r.file||""),sheet:String(r.sheet||""),hidden:!!r.hidden,date:String(r.date||""),model:String(r.model||""),line:String(r.line||""),time:String(r.time||""),input:Number(r.input)||0,under:Number(r.under)||0,over:Number(r.over)||0,correct:r.correct==null?null:Number(r.correct),notes:Array.isArray(r.notes)?r.notes:[],warn:Array.isArray(r.warn)?r.warn:[],src:String(r.src||""),dup:false}));
+}
+async function save(){
+ if(!currentUser||!client){say("먼저 로그인하세요.");return;}
+ const records=selectedRecords();
+ if(!records.length){say("저장할 분석 데이터가 없습니다. 엑셀 파일을 먼저 분석해 주세요.");return;}
+ const json=JSON.stringify(records);
+ if(new TextEncoder().encode(json).length>950000){say("결과 데이터가 950KB를 초과합니다. 모델·라인 필터로 나누어 저장하세요.");return;}
+ const total=records.reduce((a,r)=>(a.input+=r.input,a.under+=r.under,a.over+=r.over,a),{input:0,under:0,over:0});
+ const title=E("cloud-title").value.trim()||("분석 "+new Date().toLocaleString("ko-KR"));
+ const options={group:E("gb").value,mode:E("md").value,year:Number(E("year").value)||2026,tu:Number(E("tu").value)||0,to:Number(E("to").value)||0};
+ const payload={user_id:currentUser.id,title:title.slice(0,100),file_names:[...new Set(records.map(x=>x.file))],record_count:records.length,input_count:total.input,under_count:total.under,over_count:total.over,records,display_options:options};
+ busy(true);
+ try{const {error}=await client.from("inspection_analyses").insert(payload);if(error)throw error;say("분석 이력이 저장되었습니다.");await history();}
+ catch(err){say("저장 실패: "+err.message);}finally{busy(false);}
+}
+async function openRecord(id){
+ if(!currentUser)return;
+ busy(true);
+ try{
+  const {data,error}=await client.from("inspection_analyses").select("title,records,display_options").eq("id",id).single();
+  if(error)throw error;
+  if(!data||!Array.isArray(data.records)||data.records.length>10000)throw Error("이력 데이터 형식을 확인할 수 없습니다.");
+  REC=data.records.filter(r=>r&&Number.isFinite(Number(r.input))&&Number.isFinite(Number(r.under))&&Number.isFinite(Number(r.over))).map(r=>({...r,input:Number(r.input),under:Number(r.under),over:Number(r.over),notes:Array.isArray(r.notes)?r.notes:[],warn:Array.isArray(r.warn)?r.warn:[],dup:false}));
+  SHEETS=[];
+  for(const pair of [["fm","model"],["fl","line"]]){
+   const node=E(pair[0]);node.innerHTML='<option value="">전체</option>'+[...new Set(REC.map(r=>r[pair[1]]))].sort().map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
+  }
+  const o=data.display_options||{};
+  E("gb").value=["each","date","model","line"].includes(o.group)?o.group:"each";
+  E("md").value=["rate","qty"].includes(o.mode)?o.mode:"rate";
+  E("tu").value=Number.isFinite(Number(o.tu))?o.tu:1;
+  E("to").value=Number.isFinite(Number(o.to))?o.to:5;
+  E("out").hidden=!REC.length;
+  if(REC.length){render();E("status").textContent="저장 이력 불러옴: "+data.title+" · "+REC.length+"건";E("out").scrollIntoView({behavior:"smooth",block:"start"});}
+  say("저장된 분석 결과를 불러왔습니다.");
+ }catch(err){say("불러오기 실패: "+err.message);}finally{busy(false);}
+}
+async function removeRecord(id){
+ if(!currentUser||!confirm("이 분석 이력을 삭제하시겠습니까? 삭제한 이력은 복구할 수 없습니다."))return;
+ busy(true);
+ try{const {error}=await client.from("inspection_analyses").delete().eq("id",id);if(error)throw error;say("선택한 이력을 삭제했습니다.");await history();}
+ catch(err){say("삭제 실패: "+err.message);}finally{busy(false);}
+}
+E("cloud-signin").addEventListener("click",()=>auth("signin"));
+E("cloud-signup").addEventListener("click",()=>auth("signup"));
+E("cloud-signout").addEventListener("click",async()=>{if(client){await client.auth.signOut();currentUser=null;updateState();say("로그아웃되었습니다.");}});
+E("cloud-save").addEventListener("click",save);
+E("cloud-refresh").addEventListener("click",history);
+E("cloud-history").addEventListener("click",e=>{const t=e.target.closest("button[data-id]");if(!t)return;if(t.dataset.act==="open")openRecord(t.dataset.id);else if(t.dataset.act==="delete")removeRecord(t.dataset.id);});
+const oldRender=render;
+render=function(...args){oldRender(...args);busy(loading);};
+updateState();
+(async function init(){
+ try{
+  const {createClient}=await import("https://esm.sh/@supabase/supabase-js@2.91.0");
+  client=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  const {data,error}=await client.auth.getUser();
+  if(error&&error.name!=="AuthSessionMissingError")throw error;
+  currentUser=data?.user||null;updateState();if(currentUser)await history();
+  client.auth.onAuthStateChange((_event,session)=>{const newId=session?.user?.id||null;if(newId!==(currentUser?.id||null)){currentUser=session?.user||null;updateState();if(currentUser)queueMicrotask(()=>history());}});
+  if(!currentUser)say("준비 완료. 분석은 로그인 없이 사용할 수 있습니다.");
+ }catch(err){say("Supabase 연결 실패: "+err.message+". 인터넷 연결 또는 CDN 차단 여부를 확인해 주세요.");}
+})();
+})();
+</script>
+</body>
+</html>
