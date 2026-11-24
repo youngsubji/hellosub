@@ -254,6 +254,11 @@
             outline: 2px solid #a6baff;
         }
 
+        .toolbar > :is(button, #range, #search) {
+            height: 40px;
+            font-size: 13px;
+        }
+
         .search {
             max-width: 250px;
         }
@@ -360,6 +365,7 @@
             left: 0;
             z-index: 6;
             background: #f8faff;
+            font-size: 12px;
             font-weight: 700;
             border-bottom: 2px solid #dce4f0;
         }
@@ -369,7 +375,7 @@
         }
 
         .today {
-            background: #fff7ed !important;
+            background: #fff7ed;
             border-left: 2px solid #f97316 !important;
         }
 
@@ -392,8 +398,8 @@
             background: #f6f8fc;
         }
 
-        .taskname {
-            padding-left: 26px;
+        .cell.sticky.taskname {
+            padding-left: 30px;
         }
 
         .cell.sticky:not(.corner) {
@@ -469,8 +475,24 @@
 
         .rowlabel .name {
             min-width: 0;
+            font-size: 12px;
             line-height: 1.4;
             overflow-wrap: anywhere;
+        }
+
+        .rowlabel .project-toggle,
+        .rowlabel .project-marker {
+            width: 22px;
+            text-align: center;
+        }
+
+        .rowlabel .project-toggle {
+            height: 22px;
+            padding: 0;
+            margin-left: 0;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1;
         }
 
         .empty {
@@ -548,7 +570,7 @@
         }
 
         .progress-chip {
-            font-size: 11px;
+            font-size: 12px;
             color: #64748b;
             white-space: nowrap;
         }
@@ -766,12 +788,11 @@
         .summary-status.delayed { background: #facc15; color: #713f12; }
         .summary-status.stopped { background: #c00; color: white; }
 
-        .cell.sticky.is-complete, .cell.barcell.is-complete, .summary tbody .is-complete {
-            background: #f0f0f0;
+        .cell.sticky.is-complete, .cell.barcell.is-complete,
+        .summary tbody .is-complete, .summary tbody .is-complete:hover {
+            background: #fafafa;
             color: #454545;
         }
-        .cell.barcell.is-complete.weekend { background: #e9e9e9; }
-        .summary tbody .is-complete:hover { background: #e8e8e8; }
         .is-complete .summary-memo { color: #555; }
         .is-complete .progress-chip { background: #e2e2e2; color: #454545; }
 
@@ -838,7 +859,7 @@
                 <option value="90">90일</option>
             </select>
 
-            <input class="search" id="search" placeholder="프로젝트 / 업무 / 담당자 검색" oninput="render()">
+            <input class="search" id="search" placeholder="프로젝트 / 업무 / 담당자 검색">
 
             <button type="button" class="btn-drive" onclick="openDriveModal()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px">
@@ -1079,6 +1100,9 @@
         const palette = ['#4777ed', '#e8a33e', '#18a58c', '#a46bd5', '#dc6483', '#55889e', '#8eac40'];
         const COMPLETE_COLOR = '#626262';
         const DAY_W = 46;
+        const searchInput = document.getElementById('search');
+        const collapsedProjects = new Set();
+        const collapsedSearchProjects = new Set();
         const MAX_ATTACHMENTS = 3;
         const MAX_IMAGE_CHARS = 36000;
         const MAX_TOTAL_IMAGE_CHARS = 2000000;
@@ -1825,7 +1849,8 @@ function formatHeaderRow(sheet, numCols, bgColor) {
         }
 
         function render() {
-            const q = document.getElementById('search').value.trim().toLowerCase();
+            const q = searchInput.value.trim().toLowerCase();
+            const collapsed = q ? collapsedSearchProjects : collapsedProjects;
             const n = Number(document.getElementById('range').value);
             const today = iso(new Date());
 
@@ -1848,8 +1873,15 @@ function formatHeaderRow(sheet, numCols, bgColor) {
             let rows = [];
             for (const p of projects) {
                 const projectColor = /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : palette[0];
-                rows.push({ type: 'project', item: p, range: projectDates(p), projectColor, complete: p.status === '완료' });
-                for (const t of data.tasks.filter(t => t.projectId === p.id && (!q || [p.name, p.owner, t.name, t.owner].some(x => String(x).toLowerCase().includes(q))))) {
+                const tasks = data.tasks.filter(t => t.projectId === p.id &&
+                    (!q || [p.name, p.owner, t.name, t.owner].some(x => String(x).toLowerCase().includes(q))));
+                const expanded = !collapsed.has(String(p.id));
+                rows.push({
+                    type: 'project', item: p, range: projectDates(p), projectColor,
+                    complete: p.status === '완료', hasTasks: tasks.length > 0, expanded
+                });
+                if (!expanded) continue;
+                for (const t of tasks) {
                     rows.push({ type: 'task', item: t, range: { start: cleanDate(t.start), end: cleanDate(t.end) }, projectColor, complete: t.status === '완료' });
                 }
             }
@@ -1876,10 +1908,15 @@ function formatHeaderRow(sheet, numCols, bgColor) {
                 let p = r.item;
                 const color = r.complete ? COMPLETE_COLOR : r.projectColor;
                 const completedClass = r.complete ? 'is-complete' : '';
+                const marker = r.hasTasks
+                    ? `<button type="button" class="project-toggle" data-toggle-project="${esc(p.id)}"
+                        aria-expanded="${r.expanded}" aria-label="${esc(p.name)} 하위 업무"
+                        title="하위 업무 ${r.expanded ? '접기' : '펼치기'}">${r.expanded ? '−' : '+'}</button>`
+                    : `<span class="${r.type === 'project' ? 'project-marker' : ''}" style="color:${color}" aria-hidden="true">●</span>`;
                 const editAttributes = `data-edit-type="${r.type}" data-edit-id="${esc(p.id)}"`;
                 html += `<div class="cell sticky ${r.type === 'project' ? 'project' : 'taskname'} ${completedClass}">
       <div class="rowlabel">
-        <span style="color:${color}">●</span>
+        ${marker}
         <span class="name" style="${r.type === 'project' || r.complete ? 'color:' + color : ''}" title="${esc(p.name)}">${r.type === 'task' ? '↳ ' : ''}${esc(p.name)}</span>
         <span class="progress-chip" title="일정 기준 자동 진행률">${progress(p.start, p.end)}%</span>
         <button type="button" title="수정" ${editAttributes}>수정</button>
@@ -2341,7 +2378,23 @@ function formatHeaderRow(sheet, numCols, bgColor) {
         document.getElementById('addProjectBtn').addEventListener('click', () => openForm('project'));
         document.getElementById('addTaskBtn').addEventListener('click', () => openForm('task'));
         document.getElementById('gasCodeText').value = GAS_TEMPLATE_CODE;
-        document.getElementById('gantt').addEventListener('click', event => {
+        searchInput.addEventListener('input', () => {
+            collapsedSearchProjects.clear();
+            render();
+        });
+
+        const gantt = document.getElementById('gantt');
+        gantt.addEventListener('click', event => {
+            const toggle = event.target.closest('[data-toggle-project]');
+            if (toggle) {
+                const id = toggle.dataset.toggleProject;
+                const collapsed = searchInput.value.trim() ? collapsedSearchProjects : collapsedProjects;
+                if (!collapsed.delete(id)) collapsed.add(id);
+                render();
+                gantt.querySelector(`[data-toggle-project="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
+                return;
+            }
+
             const target = event.target.closest('[data-edit-id]');
             if (target) openForm(target.dataset.editType, target.dataset.editId);
         });
