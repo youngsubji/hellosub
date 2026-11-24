@@ -174,7 +174,8 @@
             margin-top: 6px;
         }
 
-        button {
+        button,
+        .btn-inspection {
             cursor: pointer;
             border: 1px solid #d6dfeb;
             border-radius: 8px;
@@ -238,6 +239,23 @@
             border-color: #86efac;
         }
 
+        .btn-inspection {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 96px;
+            background: #dfeaf8;
+            border-color: #96bff4;
+            color: #1460a6;
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-inspection:hover {
+            background: #d0e2f8;
+        }
+
         input,
         textarea,
         select {
@@ -254,7 +272,7 @@
             outline: 2px solid #a6baff;
         }
 
-        .toolbar > :is(button, #range, #search) {
+        .toolbar > :is(button, .btn-inspection, #range, #search) {
             height: 40px;
             font-size: 13px;
         }
@@ -873,6 +891,7 @@
             <button type="button" onclick="exportData()">JSON 백업</button>
             <button type="button" onclick="document.getElementById('importFile').click()">백업 복원</button>
             <button type="button" id="downloadPdfBtn" onclick="downloadGanttPdf()">PDF 다운로드</button>
+            <a class="btn-inspection" href="./inspection/" target="_blank" rel="noopener">분석기</a>
             <div class="notification-slot"><div id="toast" class="toast" role="status" aria-live="polite"></div></div>
             <input type="file" id="importFile" accept="application/json" hidden onchange="importData(event)">
         </div>
