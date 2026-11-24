@@ -838,12 +838,87 @@
         @media (max-width: 480px) {
             .attachment-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
+
+        /* PC / 모바일 보기: 기존 데이터 및 간트 날짜 폭과 독립적인 표시 설정 */
+        .view-switch { display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-basis:100%; min-width:0; }
+        .view-switch-label { font-size:12px; font-weight:700; color:#475569; }
+        .view-switch button { padding:8px 14px; min-height:36px; white-space:nowrap; }
+        .view-switch button[aria-pressed="true"] { color:#fff; background:#315cf5; border-color:#315cf5; font-weight:700; }
+        .view-switch button:focus-visible { outline:2px solid #315cf5; outline-offset:2px; }
+        .header-left, .header-right, .wrap, .board, .toolbar, .stats { min-width:0; }
+        .header-right, .boardtop { flex-wrap:wrap; gap:8px; }
+        .header-right > *, .toolbar > *, .boardtop > * { max-width:100%; min-width:0; }
+        .boardtop strong, .boardtop small, .header-left h1, .cloud-badge, .guide-box, .field { overflow-wrap:anywhere; }
+        .cloud-badge .status-dot { flex:none; }
+        .toolbar > :is(button, .btn-inspection, #range, #search) { min-height:40px; height:auto; }
+        .toolbar > :is(button, .btn-inspection) { white-space:normal; }
+        .rowlabel .name { flex:1 1 0; white-space:normal; overflow:visible; text-overflow:clip; }
+        .rowlabel > button:not(.project-toggle) { flex:none; white-space:nowrap; min-width:38px; }
+        .gantt { overscroll-behavior-inline:contain; }
+        .gantt-grid { --label-w: min(480px, max(0px, calc(100cqw - 2 * var(--day-w, 46px)))); }
+        .dialog { max-width:100%; }
+        .dialog button, .tabs button { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+        .dialog .actions, .tabs, #driveModal .dialog div[style*="display:flex"] { flex-wrap:wrap; }
+        .fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .field > * { min-width:0; max-width:100%; }
+        .summary td { overflow-wrap:anywhere; }
+        html[data-view-mode="mobile"] .wrap { max-width:800px; padding:10px; }
+        html[data-view-mode="mobile"] header { padding:12px; }
+        html[data-view-mode="mobile"] .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(135px,100%),1fr)); gap:8px; }
+        html[data-view-mode="mobile"] .stats .tile { min-width:0; padding:12px; }
+        html[data-view-mode="mobile"] .toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+        html[data-view-mode="mobile"] .toolbar > :is(button,.btn-inspection,#range,#search) { width:100% !important; max-width:none; min-width:0; min-height:44px; }
+        html[data-view-mode="mobile"] .toolbar > #search, html[data-view-mode="mobile"] .notification-slot { grid-column:1/-1; width:100%; min-width:0; max-width:none; margin:0; }
+        html[data-view-mode="mobile"] .boardtop { align-items:flex-start; flex-direction:column; padding:12px; }
+        html[data-view-mode="mobile"] .gantt-grid { --label-w:min(480px, max(0px, calc(100cqw - var(--day-w, 46px)))); }
+        html[data-view-mode="mobile"] .cell.sticky { padding-inline:8px; }
+        html[data-view-mode="mobile"] .cell.sticky.taskname { padding-left:16px; }
+        html[data-view-mode="mobile"] .rowlabel { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:4px 6px; }
+        html[data-view-mode="mobile"] .rowlabel > :first-child { grid-column:1; grid-row:1/3; }
+        html[data-view-mode="mobile"] .rowlabel .name { grid-column:2; grid-row:1/3; font-size:13px; }
+        html[data-view-mode="mobile"] .rowlabel .progress-chip { grid-column:3; grid-row:1; justify-self:center; }
+        html[data-view-mode="mobile"] .rowlabel > button:not(.project-toggle) { grid-column:3; grid-row:2; margin:0; min-width:44px; min-height:32px; }
+        html[data-view-mode="mobile"] .cell.sticky:not(.corner), html[data-view-mode="mobile"] .barcell { min-height:58px; }
+        html[data-view-mode="mobile"] .dialog { padding:14px; max-height:calc(100vh - 28px); max-height:calc(100dvh - 28px); }
+        html[data-view-mode="mobile"] .fields { grid-template-columns:minmax(0,1fr); }
+        html[data-view-mode="mobile"] .wide { grid-column:auto; }
+        html[data-view-mode="mobile"] .field :is(input,textarea,select) { font-size:16px; }
+        html[data-view-mode="mobile"] #modal .actions { bottom:-14px; }
+        html[data-view-mode="mobile"] .attachment-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        html[data-view-mode="mobile"] .summary table { min-width:0; }
+        html[data-view-mode="mobile"] .summary table,
+        html[data-view-mode="mobile"] .summary tbody { display:block; width:100%; }
+        html[data-view-mode="mobile"] .summary thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+        html[data-view-mode="mobile"] .summary tbody tr { display:grid; grid-template-columns:minmax(0,1fr); border-bottom:1px solid #dce4f0; padding:8px 12px; }
+        html[data-view-mode="mobile"] .summary td { display:grid; grid-template-columns:76px minmax(0,1fr); gap:8px; min-width:0; padding:5px 0; border:0; white-space:normal; overflow-wrap:anywhere; }
+        html[data-view-mode="mobile"] .summary td::before { font-size:11px; font-weight:600; color:#64748b; content:attr(data-mobile-label); }
+        html[data-view-mode="mobile"] .summary td.summary-content .summary-memo { grid-column:2; }
+        html[data-view-mode="mobile"] .summary td .summary-status { justify-self:start; }
+        html[data-view-mode="mobile"] .summary td[colspan] { display:block; padding:16px 0; }
+        html[data-view-mode="mobile"] .summary td[colspan]::before { display:none; }
+        @media (max-width:600px) {
+            /* PC 모드를 작은 기기에서 선택해도 필수 컨트롤을 화면 밖으로 내보내지 않습니다. */
+            .gantt-grid { --label-w:min(480px,max(0px,calc(100cqw - var(--day-w,46px)))); }
+            .cell.sticky { padding-inline:8px; }
+            .cell.sticky.taskname { padding-left:16px; }
+            .notification-slot { min-width:0; }
+            .toolbar > #search { max-width:100%; }
+            .dialog { padding:14px; max-height:calc(100vh - 28px); max-height:calc(100dvh - 28px); }
+            .fields { grid-template-columns:minmax(0,1fr); }
+            .wide { grid-column:auto; }
+            #modal .actions { bottom:-14px; }
+        }
     </style>
 </head>
 
 <body>
 
     <header>
+        <div class="view-switch" role="group" aria-label="화면 모드">
+            <span class="view-switch-label">화면 모드</span>
+            <button type="button" id="viewPcBtn" aria-pressed="false">PC 모드</button>
+            <button type="button" id="viewMobileBtn" aria-pressed="false">모바일 모드</button>
+        </div>
         <div class="header-left">
             <h1>⭐지영섭 업무 현황⭐</h1>
             <small>  🧰진행 현황 - 개인모니터링용🧰</small>
@@ -910,9 +985,9 @@
                 <span class="summary-note">간트차트와 동일한 검색 결과 · Status는 저장된 진행 상태</span>
             </div>
             <div class="summary-scroll">
-                <table aria-labelledby="summaryTitle">
+                <table aria-labelledby="summaryTitle" role="table">
                     <thead><tr><th scope="col">프로젝트</th><th scope="col">내용</th><th scope="col">담당자</th><th scope="col">시작일</th><th scope="col">완료일</th><th scope="col">Status</th></tr></thead>
-                    <tbody id="summaryBody"></tbody>
+                    <tbody id="summaryBody" role="rowgroup"></tbody>
                 </table>
             </div>
         </section>
@@ -1105,6 +1180,35 @@
             </div>
         </div>
     </div>
+
+
+    <script>
+        // UI preference only; never writes dashboard records or cloud settings.
+        (() => {
+            const key = 'ys-dashboard-view-mode';
+            const media = window.matchMedia('(max-width: 768px)');
+            const pc = document.getElementById('viewPcBtn');
+            const mobile = document.getElementById('viewMobileBtn');
+            let selected = null;
+            try { const saved = localStorage.getItem(key); if (saved === 'pc' || saved === 'mobile') selected = saved; } catch (_) {}
+            function apply() {
+                const mode = selected || (media.matches ? 'mobile' : 'pc');
+                document.documentElement.dataset.viewMode = mode;
+                pc.setAttribute('aria-pressed', String(mode === 'pc'));
+                mobile.setAttribute('aria-pressed', String(mode === 'mobile'));
+            }
+            function choose(mode) {
+                selected = mode;
+                try { localStorage.setItem(key, mode); } catch (_) {}
+                apply();
+            }
+            pc.addEventListener('click', () => choose('pc'));
+            mobile.addEventListener('click', () => choose('mobile'));
+            if (media.addEventListener) media.addEventListener('change', apply);
+            else if (media.addListener) media.addListener(apply);
+            apply();
+        })();
+    </script>
 
     <!-- 알림 토스트 -->
 
@@ -1856,13 +1960,13 @@ function formatHeaderRow(sheet, numCols, bgColor) {
                 const project = row.type === 'project' ? item : projectsById.get(item.projectId);
                 const status = item.status || '대기';
                 const statusClass = ({'진행':'active', '완료':'done', '지연':'delayed', '중단':'stopped'})[status] || '';
-                return `<tr class="${row.complete ? 'is-complete' : ''}">
-                    <td class="summary-project">${esc(project?.name || '—')}</td>
-                    <td class="summary-content">${row.type === 'task' ? '↳ ' : ''}${esc(item.name)}${item.memo ? `<div class="summary-memo">${esc(item.memo)}</div>` : ''}</td>
-                    <td>${esc(item.owner || '—')}</td>
-                    <td class="summary-date">${esc(row.range.start || '—')}</td>
-                    <td class="summary-date">${esc(row.range.end || '—')}</td>
-                    <td><span class="summary-status ${statusClass}">${esc(status)}</span></td>
+                return `<tr role="row" class="${row.complete ? 'is-complete' : ''}">
+                    <td class="summary-project" role="cell" data-mobile-label="프로젝트">${esc(project?.name || '—')}</td>
+                    <td class="summary-content" role="cell" data-mobile-label="내용"><span>${row.type === 'task' ? '↳ ' : ''}${esc(item.name)}</span>${item.memo ? `<div class="summary-memo">${esc(item.memo)}</div>` : ''}</td>
+                    <td role="cell" data-mobile-label="담당자">${esc(item.owner || '—')}</td>
+                    <td class="summary-date" role="cell" data-mobile-label="시작일">${esc(row.range.start || '—')}</td>
+                    <td class="summary-date" role="cell" data-mobile-label="완료일">${esc(row.range.end || '—')}</td>
+                    <td role="cell" data-mobile-label="상태"><span class="summary-status ${statusClass}">${esc(status)}</span></td>
                 </tr>`;
             }).join('') : '<tr><td colspan="6" class="empty">표시할 프로젝트 또는 업무가 없습니다.</td></tr>';
         }
