@@ -274,14 +274,17 @@
         }
 
         .gantt {
+            container-type: inline-size;
             overflow: auto;
             max-height: 68vh;
             background: #fff;
         }
 
         .gantt-grid {
+            /* 좁은 화면에서도 날짜 열 두 칸을 볼 수 있도록 고정 열 폭을 조정합니다. */
+            --label-w: min(480px, calc(100cqw - 2 * var(--day-w, 46px)));
             display: grid;
-            grid-template-columns: 290px repeat(var(--days), var(--day-w, 46px));
+            grid-template-columns: var(--label-w) repeat(var(--days), var(--day-w, 46px));
             width: max-content;
             position: relative;
         }
@@ -302,9 +305,9 @@
         }
 
         .cell.sticky {
-            width: 290px;
-            min-width: 290px;
-            max-width: 290px;
+            width: var(--label-w);
+            min-width: var(--label-w);
+            max-width: var(--label-w);
             position: sticky;
             left: 0;
             z-index: 3;
@@ -350,8 +353,9 @@
             color: #dc2626;
         }
 
-        .corner {
+        .cell.sticky.corner {
             position: sticky;
+            height: 52px;
             top: 0;
             left: 0;
             z-index: 6;
@@ -392,22 +396,31 @@
             padding-left: 26px;
         }
 
+        .cell.sticky:not(.corner) {
+            height: auto;
+            min-height: 42px;
+            padding-block: 6px;
+        }
+
         .taskname button,
         .project button {
             padding: 4px 7px;
             font-size: 11px;
             margin-left: auto;
+            white-space: nowrap;
         }
 
         .barcell {
             position: relative;
+            height: auto;
+            min-height: 42px;
             padding: 0;
         }
 
         .bar {
             position: absolute;
             left: 3px;
-            top: 9px;
+            top: calc(50% - 12px);
             height: 24px;
             border-radius: 6px;
             z-index: 2;
@@ -436,7 +449,7 @@
 
         .bar.bar-project {
             height: 18px;
-            top: 12px;
+            top: calc(50% - 9px);
             font-size: 10px;
             font-weight: 600;
             border-radius: 4px;
@@ -448,13 +461,16 @@
             align-items: center;
             gap: 6px;
             width: 100%;
-            overflow: hidden;
+        }
+
+        .rowlabel > :not(.name) {
+            flex-shrink: 0;
         }
 
         .rowlabel .name {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            min-width: 0;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
         }
 
         .empty {
@@ -721,10 +737,6 @@
             .wide {
                 grid-column: auto;
             }
-
-            .gantt-grid {
-                grid-template-columns: 200px repeat(var(--days), var(--day-w, 46px));
-            }
         }
     
         .creator { color: #64748b; font-size: 12px; white-space: nowrap; }
@@ -797,7 +809,7 @@
             <h1>⭐지영섭 업무 현황⭐</h1>
             <small>  🧰진행 현황 - 개인모니터링용🧰</small>
         </div>
-        <div class="header-right"><span class="creator">만든사람 YOUNGSUB JI</span>
+        <div class="header-right"><span class="creator">만든이 : 지영섭</span>
             <div id="cloudBadge" class="cloud-badge offline" onclick="openDriveModal()" title="클릭하여 구글 드라이브 연동 설정">
                 <span class="status-dot"></span>
                 <span id="cloudStatusText">구글 드라이브 미연동</span>
@@ -2190,11 +2202,38 @@ function formatHeaderRow(sheet, numCols, bgColor) {
                 gantt.querySelectorAll('.sticky:not(.corner)').forEach(el=>{
                     paintBox(el);
                     const r=rectOf(el), name=el.querySelector('.name'), chip=el.querySelector('.progress-chip');
+                    if (r.y + r.h <= 38 || r.y >= height + 38) return;
                     ctx.save();ctx.beginPath();ctx.rect(r.x,r.y,r.w,r.h);ctx.clip();
-                    if(name) {
-                        const nr=rectOf(name);ctx.fillStyle=getComputedStyle(name).color;ctx.font=getComputedStyle(name).font;ctx.textBaseline='middle';
-                        let label=name.textContent;while(label.length && ctx.measureText(label).width>nr.w) label=label.slice(0,-1);
-                        ctx.fillText(label,nr.x,nr.y+nr.h/2);
+                    ctx.textBaseline = 'middle';
+                    if (name?.firstChild) {
+                        // 브라우저에서 줄이 바뀐 위치를 그대로 PDF에 반영합니다.
+                        const nameStyle = getComputedStyle(name);
+                        const nameX = rectOf(name).x;
+                        const range = document.createRange();
+                        const textNode = name.firstChild;
+                        let offset = 0;
+                        let line = '';
+                        let lineRect;
+                        const paintLine = () => {
+                            const label = line.replace(/[ \t\r\n\f]+/g, ' ').replace(/^ | $/g, '');
+                            ctx.fillText(label, nameX, lineRect.top - bounds.top + 38 + lineRect.height / 2);
+                        };
+
+                        ctx.fillStyle = nameStyle.color;
+                        ctx.font = nameStyle.font;
+                        for (const character of textNode.data) {
+                            range.setStart(textNode, offset);
+                            offset += character.length;
+                            range.setEnd(textNode, offset);
+                            const rect = range.getBoundingClientRect();
+                            if (rect.width && (!lineRect || rect.top !== lineRect.top)) {
+                                if (lineRect) paintLine();
+                                lineRect = rect;
+                                line = '';
+                            }
+                            line += character;
+                        }
+                        if (lineRect) paintLine();
                     }
                     if(chip) {const cr=rectOf(chip);ctx.font=getComputedStyle(chip).font;ctx.fillStyle='#64748b';ctx.fillText(chip.textContent,cr.x,cr.y+cr.h/2);}
                     ctx.restore();
