@@ -1,138 +1,2339 @@
-<!DOCTYPE html>
-<html lang="ko"> #
+<!doctype html>
+<html lang="ko">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지영섭 | Quality Assurance Portfolio</title>
-    <link rel="stylesheet" href="tooplate-titan-style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>업무 일정 대시보드 v1.3.2 · 구글 드라이브 연동</title>
+    <style>
+        :root {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif;
+            color: #182438;
+            background: #f4f6fa;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        header {
+            background: #fff;
+            padding: 16px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e7ef;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-left h1 {
+            font-size: 21px;
+            margin: 0;
+        }
+
+        .header-left small {
+            color: #718096;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 구글 드라이브 연동 뱃지 */
+        .cloud-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            user-select: none;
+        }
+
+        .cloud-badge.offline {
+            background: #f1f5f9;
+            color: #64748b;
+            border-color: #e2e8f0;
+        }
+
+        .cloud-badge.offline:hover {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .cloud-badge.syncing {
+            background: #fef9c3;
+            color: #854d0e;
+            border-color: #fde047;
+        }
+
+        .cloud-badge.synced {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .cloud-badge.synced:hover {
+            background: #d1fae5;
+        }
+
+        .cloud-badge.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .cloud-badge.offline .status-dot {
+            background: #94a3b8;
+        }
+
+        .cloud-badge.syncing .status-dot {
+            background: #eab308;
+            animation: pulse 1s infinite;
+        }
+
+        .cloud-badge.synced .status-dot {
+            background: #10b981;
+        }
+
+        .cloud-badge.error .status-dot {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.35;
+                transform: scale(0.8);
+            }
+        }
+
+        .version-tag {
+            font-size: 11px;
+            color: #8fa0b5;
+            font-weight: 600;
+            background: #eef3f9;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .wrap {
+            padding: 22px;
+            max-width: 1800px;
+            margin: auto;
+        }
+
+        .toolbar,
+        .stats {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stats .tile {
+            background: white;
+            border: 1px solid #e2e7ef;
+            border-radius: 12px;
+            padding: 15px 22px;
+            min-width: 145px;
+        }
+
+        .tile b {
+            display: block;
+            font-size: 24px;
+            margin-top: 6px;
+        }
+
+        button {
+            cursor: pointer;
+            border: 1px solid #d6dfeb;
+            border-radius: 8px;
+            background: white;
+            padding: 10px 14px;
+            color: #26364e;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        button:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        button.primary {
+            background: #315cf5;
+            color: white;
+            border-color: #315cf5;
+            font-weight: 600;
+        }
+
+        button.primary:hover {
+            background: #254bd6;
+        }
+
+        button.success {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+            font-weight: 600;
+        }
+
+        button.success:hover {
+            background: #059669;
+        }
+
+        button.danger {
+            color: #c32c42;
+            border-color: #f3c7ce;
+        }
+
+        button.danger:hover {
+            background: #fff5f6;
+        }
+
+        .btn-drive {
+            background: #f0fdf4;
+            color: #15803d;
+            border-color: #bbf7d0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .btn-drive:hover {
+            background: #dcfce7;
+            border-color: #86efac;
+        }
+
+        input,
+        textarea,
+        select {
+            border: 1px solid #d9e1ec;
+            border-radius: 8px;
+            padding: 10px;
+            font: inherit;
+            width: 100%;
+            background: white;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: 2px solid #a6baff;
+        }
+
+        .search {
+            max-width: 250px;
+        }
+
+        .board {
+            background: white;
+            border: 1px solid #e1e7f0;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .boardtop {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 18px;
+            align-items: center;
+            border-bottom: 1px solid #e4e8ef;
+        }
+
+        .gantt {
+            overflow: auto;
+            max-height: 68vh;
+            background: #fff;
+        }
+
+        .gantt-grid {
+            display: grid;
+            grid-template-columns: 290px repeat(var(--days), var(--day-w, 46px));
+            width: max-content;
+            position: relative;
+        }
+
+        .cell {
+            width: var(--day-w, 46px);
+            min-width: var(--day-w, 46px);
+            max-width: var(--day-w, 46px);
+            height: 42px;
+            border-right: 1px solid #edf0f5;
+            border-bottom: 1px solid #edf0f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        .cell.sticky {
+            width: 290px;
+            min-width: 290px;
+            max-width: 290px;
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            background: white;
+            justify-content: flex-start;
+            padding: 0 12px;
+            border-right: 2px solid #dce4f0;
+        }
+
+        .dayhead {
+            position: sticky;
+            top: 0;
+            z-index: 4;
+            background: #f8faff;
+            height: 52px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3px 1px;
+            line-height: 1.25;
+            text-align: center;
+            border-bottom: 2px solid #dce4f0;
+        }
+
+        .dayhead .day-num {
+            font-weight: 700;
+            font-size: 11px;
+            color: #1e293b;
+        }
+
+        .dayhead .day-name {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .dayhead.weekend-sat .day-name {
+            color: #2563eb;
+        }
+
+        .dayhead.weekend-sun .day-name {
+            color: #dc2626;
+        }
+
+        .corner {
+            position: sticky;
+            top: 0;
+            left: 0;
+            z-index: 6;
+            background: #f8faff;
+            font-weight: 700;
+            border-bottom: 2px solid #dce4f0;
+        }
+
+        .weekend {
+            background: #fafbfe;
+        }
+
+        .today {
+            background: #fff7ed !important;
+            border-left: 2px solid #f97316 !important;
+        }
+
+        .dayhead.today {
+            background: #ffedd5 !important;
+            border-left: 2px solid #f97316 !important;
+        }
+
+        .dayhead.today .day-num {
+            color: #c2410c;
+        }
+
+        .dayhead.today .day-name {
+            color: #ea580c;
+            font-weight: 700;
+        }
+
+        .project {
+            font-weight: 700;
+            background: #f6f8fc;
+        }
+
+        .taskname {
+            padding-left: 26px;
+        }
+
+        .taskname button,
+        .project button {
+            padding: 4px 7px;
+            font-size: 11px;
+            margin-left: auto;
+        }
+
+        .barcell {
+            position: relative;
+            padding: 0;
+        }
+
+        .bar {
+            position: absolute;
+            left: 3px;
+            top: 9px;
+            height: 24px;
+            border-radius: 6px;
+            z-index: 2;
+            opacity: .92;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            pointer-events: auto;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            transition: opacity 0.15s ease, transform 0.15s ease, filter 0.15s ease;
+        }
+
+        .bar:hover {
+            opacity: 1;
+            transform: translateY(-1px);
+            filter: brightness(1.08);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+        }
+
+        .bar.bar-project {
+            height: 18px;
+            top: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 4px;
+            opacity: .95;
+        }
+
+        .rowlabel {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .rowlabel .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .empty {
+            padding: 40px;
+            text-align: center;
+            color: #8491a6;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 32, 57, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 14px;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .dialog {
+            background: #fff;
+            border-radius: 16px;
+            width: min(720px, 100%);
+            max-height: 94vh;
+            overflow: auto;
+            box-shadow: 0 25px 70px rgba(16, 29, 53, 0.25);
+            padding: 24px;
+        }
+
+        .dialog h2 {
+            font-size: 19px;
+            margin: 0 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .progress-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .progress-track {
+            height: 9px;
+            border-radius: 100px;
+            background: #e8edf5;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4777ed;
+            transition: width .2s;
+        }
+
+        .progress-value {
+            font-weight: 700;
+            color: #294d98;
+            min-width: 43px;
+            text-align: right;
+        }
+
+        .progress-chip {
+            font-size: 11px;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .wide {
+            grid-column: 1/-1;
+        }
+
+        .field label em {
+            color: #e23c54;
+        }
+
+        .calendar {
+            margin-top: 14px;
+            border: 1px solid #e1e7ef;
+            border-radius: 12px;
+            padding: 12px;
+            background: #fbfcfe;
+        }
+
+        .calhead {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .calgrid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+            margin-top: 10px;
+        }
+
+        .calgrid button {
+            border: 0;
+            padding: 10px 2px;
+            border-radius: 6px;
+        }
+
+        .calgrid button.selected {
+            background: #dce5ff;
+            color: #214cde;
+        }
+
+        .calgrid button.endpoint {
+            background: #315cf5;
+            color: #fff;
+        }
+
+        .calgrid button.blank {
+            visibility: hidden;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #7d889b;
+        }
+
+        .foot {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.6;
+            background: #fff;
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* 연동 모달 전용 탭 & 스타일 */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        .tab-btn {
+            border: 0;
+            background: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .tab-btn.active {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .guide-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .guide-box ol {
+            margin: 6px 0 0;
+            padding-left: 20px;
+        }
+
+        .guide-box li {
+            margin-bottom: 4px;
+        }
+
+        .code-preview {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            max-height: 140px;
+            overflow: auto;
+            margin-top: 8px;
+            white-space: pre;
+        }
+
+        /* 토스트 알림 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.25s ease;
+            pointer-events: none;
+            max-width: 420px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.error {
+            background: #b91c1c;
+        }
+
+        .toast.success {
+            background: #065f46;
+        }
+
+        @media(max-width: 768px) {
+            header {
+                padding: 14px;
+            }
+
+            .wrap {
+                padding: 10px;
+            }
+
+            .fields {
+                grid-template-columns: 1fr;
+            }
+
+            .wide {
+                grid-column: auto;
+            }
+
+            .gantt-grid {
+                grid-template-columns: 200px repeat(var(--days), var(--day-w, 46px));
+            }
+        }
+    
+        .creator { color: #64748b; font-size: 12px; white-space: nowrap; }
+        .notification-slot { margin-left: auto; min-width: 200px; flex: 1; max-width: 360px; min-height: 40px; }
+        .notification-slot .toast { position: static; transform: none; max-width: none; padding: 10px 14px; font-size: 12px; box-shadow: none; }
+        .notification-slot .toast.show { transform: none; }
+        .project .name { font-weight: 700; }
+        @media(max-width:768px) { .notification-slot { max-width: none; flex-basis: 100%; } }
+
+        .summary { margin-top: 18px; }
+        .summary h2 { margin: 0; font-size: 16px; }
+        .summary .boardtop { gap: 12px; flex-wrap: wrap; }
+        .summary-note { color: #64748b; font-size: 12px; }
+        .summary-scroll { overflow-x: auto; }
+        .summary table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px; text-align: left; }
+        .summary th { background: #f8faff; color: #475569; font-size: 12px; }
+        .summary th, .summary td { padding: 12px 16px; border-bottom: 1px solid #e4e8ef; vertical-align: top; }
+        .summary tbody tr:last-child td { border-bottom: 0; }
+        .summary tbody tr:hover { background: #f8faff; }
+        .summary-project { font-weight: 600; }
+        .summary-content { min-width: 230px; overflow-wrap: anywhere; }
+        .summary-memo { color: #64748b; font-size: 12px; margin-top: 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .summary-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .summary-status { display: inline-block; min-width: 64px; padding: 3px 12px; border-radius: 4px; text-align: center; font-size: 12px; font-weight: 700; background: #e2e8f0; color: #334155; }
+        .summary-status.active { background: #008f49; color: white; }
+        .summary-status.done { background: #626262; color: white; }
+        .summary-status.delayed { background: #facc15; color: #713f12; }
+        .summary-status.stopped { background: #c00; color: white; }
+
+        .cell.sticky.is-complete, .cell.barcell.is-complete, .summary tbody .is-complete {
+            background: #f0f0f0;
+            color: #454545;
+        }
+        .cell.barcell.is-complete.weekend { background: #e9e9e9; }
+        .summary tbody .is-complete:hover { background: #e8e8e8; }
+        .is-complete .summary-memo { color: #555; }
+        .is-complete .progress-chip { background: #e2e2e2; color: #454545; }
+
+        .attachment-field { margin-top: 14px; padding: 12px; border: 1px solid #dce4f0; border-radius: 10px; }
+        .attachment-heading { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .attachment-heading label { margin-right: auto; }
+        .attachment-heading input { width: auto; max-width: 100%; padding: 5px; font-size: 12px; }
+        .attachment-help, .attachment-message { display: block; margin-top: 6px; font-size: 12px; color: #475569; }
+        .attachment-message:empty { margin: 0; }
+        .attachment-message.error { color: #a22233; }
+        .attachment-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 9px 0 0; list-style: none; }
+        .attachment-list li { min-width: 0; padding: 6px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .attachment-thumb { display: block; width: 100%; padding: 0; overflow: hidden; background: #f4f6fa; border-radius: 5px; }
+        .attachment-thumb img { display: block; width: 100%; height: 76px; object-fit: contain; }
+        .attachment-meta { display: flex; justify-content: space-between; align-items: center; gap: 5px; margin-top: 5px; }
+        .attachment-meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+        .attachment-meta button { flex: none; padding: 3px 6px; font-size: 11px; }
+        .attachment-preview { max-width: min(860px, 94vw); max-height: 92vh; border: 1px solid #dce4f0; border-radius: 12px; padding: 14px; }
+        .attachment-preview::backdrop { background: #142039b8; }
+        .attachment-preview form { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .attachment-preview strong { overflow-wrap: anywhere; }
+        .attachment-preview img { display: block; max-width: 100%; max-height: 72vh; margin: auto; object-fit: contain; }
+        #modal .actions { position: sticky; bottom: -24px; z-index: 2; background: #fff; padding: 12px 0; border-top: 1px solid #e2e8f0; }
+
+        @media (max-width: 480px) {
+            .attachment-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+    </style>
 </head>
+
 <body>
-    <nav id="navbar">
-        <div class="nav-container">
-            <a href="#home" class="logo">
-                <div class="logo-icon"><img src="images/ys.png" alt="YS logo"></div>
-                <div class="logo-text">YOUNGSEOB JI</div>
-            </a>
-            <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">Profile</a></li>
-                <li><a href="#timeline">Career</a></li>
-                <li><a href="#portfolio">Projects</a></li>
-                <li><a href="#skills">Skills</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-            <div class="mobile-menu-btn" id="mobileMenuBtn"><span></span><span></span><span></span></div>
-        </div>
-        <div class="mobile-nav" id="mobileNav">
-            <ul>
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">Profile</a></li>
-                <li><a href="#timeline">Career</a></li>
-                <li><a href="#portfolio">Projects</a></li>
-                <li><a href="#skills">Skills</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </div>
-    </nav>
 
-    <section id="home" class="hero">
-        <div class="hero-bg-animation">
-            <div class="floating-shape shape-1"></div><div class="floating-shape shape-2"></div><div class="floating-shape shape-3"></div>
-            <div class="geo-shape geo-1"></div><div class="geo-shape geo-2"></div>
-            <div class="particles"><span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span></div>
+    <header>
+        <div class="header-left">
+            <h1>⭐지영섭 업무 현황⭐</h1>
+            <small>  🧰진행 현황 - 개인모니터링용🧰</small>
         </div>
-        <div class="hero-content qa-hero-content">
-            <p class="eyebrow">QUALITY ASSURANCE PORTFOLIO</p>
-            <div class="hero-title-wrapper">
-                <h1>품질을 시스템으로 만드는<br>QA 전문가 지영섭입니다.</h1>
-                <img src="images/ys.png" alt="Youngseob Ji character" class="hero-character">
+        <div class="header-right"><span class="creator">만든사람 YOUNGSUB JI</span>
+            <div id="cloudBadge" class="cloud-badge offline" onclick="openDriveModal()" title="클릭하여 구글 드라이브 연동 설정">
+                <span class="status-dot"></span>
+                <span id="cloudStatusText">구글 드라이브 미연동</span>
             </div>
-            <p class="subtitle">프로세스 설계 · 표준화 · 자동화로 제품 품질과 검증 효율을 높입니다.</p>
-            <div class="cta-buttons">
-                <a href="#portfolio" class="cta-primary">주요 프로젝트 보기</a>
-                <a href="#contact" class="cta-secondary">연락하기</a>
-            </div>
+            <span class="version-tag">v1.3.2</span>
         </div>
-        <div class="stats-section qa-stats">
-            <div class="stat-card"><span class="stat-number">13+ Years</span><span class="stat-label">품질보증 경력</span></div>
-            <div class="stat-card"><span class="stat-number">9 Years</span><span class="stat-label">LG전자 SW DQA</span></div>
-            <div class="stat-card"><span class="stat-number">2 Systems</span><span class="stat-label">ADAS·DMS 검증체계 구축</span></div>
-            <div class="stat-card"><span class="stat-number">4hr+ / Day</span><span class="stat-label">야간 자동화 검증 시간 확보</span></div>
-        </div>
-    </section>
+    </header>
 
-    <section id="about" class="fade-in">
-        <div class="container">
-            <div class="section-header"><h2 class="section-title">Profile</h2><p class="section-subtitle">Quality Assurance Specialist</p></div>
-            <div class="about-content qa-about-grid">
-                <div class="about-intro qa-profile-card">
-                    <div class="about-image"></div>
-                    <div class="about-text">
-                        <h3>전문 요약</h3>
-                        <p>품질보증(QA) 분야 13년 이상의 경력을 보유한 품질 전문가입니다. LG전자에서 9년간 글로벌 Smart TV 제품의 End-to-End 품질을 관리하며 결함관리, 근본원인분석(RCA), 시정예방조치(CAPA)를 주도했습니다. 현재 AImatics에서 차량 AI 기반 ADAS·DMS 제품의 검증체계 구축 및 표준화, SOP 제정, 결함 등급 체계 구축, 검증 자동화 도구 개발을 담당하고 있습니다.</p>
+    <div id="runtimeNotice" role="alert" hidden
+        style="margin:12px auto 0;max-width:1800px;padding:12px 18px;background:#fff0f0;border:1px solid #f4b7b7;color:#a22233;border-radius:9px">
+    </div>
+
+    <main class="wrap">
+        <div class="stats" id="stats"></div>
+
+        <div class="toolbar">
+            <button type="button" id="addProjectBtn" class="primary">+ 프로젝트 등록</button>
+            <button type="button" id="addTaskBtn">+ 하위 업무 등록</button>
+            <button type="button" onclick="move(-1)">◀ 이전</button>
+            <button type="button" onclick="goToday()">오늘</button>
+            <button type="button" onclick="move(1)">다음 ▶</button>
+
+            <select id="range" style="width:115px" onchange="render()">
+                <option value="30">30일</option>
+                <option value="60" selected>60일</option>
+                <option value="90">90일</option>
+            </select>
+
+            <input class="search" id="search" placeholder="프로젝트 / 업무 / 담당자 검색" oninput="render()">
+
+            <button type="button" class="btn-drive" onclick="openDriveModal()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px">
+                    <path
+                        d="M7.71 3.5L1.15 15l3.43 6h6.86L18.01 9.5 14.58 3.5H7.71zM14.58 3.5l6.85 12-3.43 6-6.86-12 3.44-6zM8.01 15.5l-3.43 6h13.72l3.43-6H8.01z" />
+                </svg>
+                구글 드라이브 설정
+            </button>
+            <button type="button" id="syncNowBtn" onclick="manualSync()" title="구글 드라이브와 즉시 동기화">🔄 지금 동기화</button>
+
+            <button type="button" onclick="exportData()">JSON 백업</button>
+            <button type="button" onclick="document.getElementById('importFile').click()">백업 복원</button>
+            <button type="button" id="downloadPdfBtn" onclick="downloadGanttPdf()">PDF 다운로드</button>
+            <div class="notification-slot"><div id="toast" class="toast" role="status" aria-live="polite"></div></div>
+            <input type="file" id="importFile" accept="application/json" hidden onchange="importData(event)">
+        </div>
+
+        <section class="board">
+            <div class="boardtop">
+                <strong>간트차트 <span id="period"></span></strong>
+                <small>주황색 세로선 = 오늘 · 진행률은 시작/종료일 기준 · 막대 클릭 = 수정</small>
+            </div>
+            <div class="gantt" id="gantt"></div>
+        </section>
+
+        <section class="board summary" aria-labelledby="summaryTitle">
+            <div class="boardtop">
+                <h2 id="summaryTitle">진행 요약 <span id="summaryCount" class="summary-note"></span></h2>
+                <span class="summary-note">간트차트와 동일한 검색 결과 · Status는 저장된 진행 상태</span>
+            </div>
+            <div class="summary-scroll">
+                <table aria-labelledby="summaryTitle">
+                    <thead><tr><th scope="col">프로젝트</th><th scope="col">내용</th><th scope="col">담당자</th><th scope="col">시작일</th><th scope="col">완료일</th><th scope="col">Status</th></tr></thead>
+                    <tbody id="summaryBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <div class="foot">
+            💡 <strong>안내</strong> 프로젝트와 하위 업무는 브라우저에 저장됩니다. 자동 동기화 설정 시 Google Sheets를 5분마다 확인하며, 편집 중에는 확인을 미룹니다. HTML을 새 경로에서 열 경우 이전 버전에서 내려받은 JSON 백업으로 브라우저 데이터를 옮길 수 있습니다.
+        </div>
+    </main>
+
+    <!-- 등록 / 수정 모달 -->
+    <div class="modal" id="modal">
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+            <h2 id="formTitle">업무 등록</h2>
+            <form id="form" onsubmit="save(event)">
+                <div class="fields">
+                    <div class="field wide" id="parentField">
+                        <label>소속 프로젝트 <em>*</em></label>
+                        <select id="parent"></select>
+                    </div>
+                    <div class="field wide">
+                        <label>업무명 / 프로젝트명 <em>*</em></label>
+                        <input id="name" required maxlength="100">
+                    </div>
+                    <div class="field">
+                        <label>시작 날짜 <em>*</em></label>
+                        <input type="date" id="start" required onchange="syncCalendar();updateProgressPreview()">
+                    </div>
+                    <div class="field">
+                        <label>종료 날짜 <em>*</em></label>
+                        <input type="date" id="end" required onchange="syncCalendar();updateProgressPreview()">
+                    </div>
+                    <div class="field wide">
+                        <label>담당자 <em>*</em></label>
+                        <input id="owner" required maxlength="60">
+                    </div>
+                    <div class="field wide">
+                        <label>메모</label>
+                        <textarea id="memo" rows="2" maxlength="2000"></textarea>
+                    </div>
+                    <div class="field wide" id="progressField">
+                        <label>일정 기준 진행률 (날짜 자동 계산)</label>
+                        <div class="progress-line">
+                            <div class="progress-track">
+                                <div id="progressFill" class="progress-fill" style="width:0%"></div>
+                            </div>
+                            <output id="progressValue" class="progress-value">0%</output>
+                        </div>
+                        <small id="progressExplanation">시작일과 종료일을 입력하면 자동 계산됩니다.</small>
+                    </div>
+                    <div class="field" id="colorField">
+                        <label>프로젝트 색상</label>
+                        <input type="color" id="color" value="#4478e8" style="height:43px;padding:5px">
+                    </div>
+                    <div class="field">
+                        <label>진행 상태</label>
+                        <select id="status">
+                            <option value="대기">대기</option>
+                            <option value="진행">진행</option>
+                            <option value="완료">완료</option>
+                        </select>
                     </div>
                 </div>
-                <div class="about-cards qa-competency-grid">
-                    <div class="about-card"><h4>🎯 QA Leadership</h4><p>리스크 기반 테스트 전략, 품질 게이트 운영, 유관부서 조율을 통해 개발 단계별 품질 기준을 명확히 합니다.</p></div>
-                    <div class="about-card"><h4>🧭 Quality Governance</h4><p>SOP, 결함 등급, CAPA 프로세스를 표준화하여 조직 전체가 동일한 기준으로 품질 이슈에 대응하도록 만듭니다.</p></div>
-                    <div class="about-card"><h4>⚙️ Verification Automation</h4><p>수동 검증 절차를 자동화 도구와 야간 무인 테스트 체계로 전환하여 검증 처리량과 반복성을 높입니다.</p></div>
-                    <div class="about-card"><h4>📊 Data-driven Improvement</h4><p>결함 데이터, 공정 데이터, RCA 결과를 바탕으로 재발 방지와 지속적 품질 개선을 추진합니다.</p></div>
+
+                <div class="attachment-field">
+                    <div class="attachment-heading">
+                        <label for="imageFiles"><strong>이미지 첨부</strong></label>
+                        <input type="file" id="imageFiles" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple aria-describedby="attachmentHelp">
+                    </div>
+                    <small id="attachmentHelp" class="attachment-help">JPG·PNG·WebP, 항목당 최대 3장 · 원본 장당 10MB 이하 · 미리보기용으로 자동 축소</small>
+                    <small id="attachmentStorage" class="attachment-help"></small>
+                    <div id="attachmentMessage" class="attachment-message" role="status"></div>
+                    <ul id="attachmentList" class="attachment-list" aria-label="첨부 이미지" hidden></ul>
+                </div>
+
+                <div class="calendar">
+                    <div class="calhead">
+                        <button type="button" onclick="monthShift(-1)">◀</button>
+                        <strong id="monthLabel"></strong>
+                        <button type="button" onclick="monthShift(1)">▶</button>
+                    </div>
+                    <div class="hint">시작일을 클릭하고 종료일까지 마우스로 드래그하세요. 터치 기기에서는 시작일과 종료일을 차례로 누르세요.</div>
+                    <div class="calgrid" id="calgrid"></div>
+                </div>
+
+                <div class="actions">
+                    <button type="button" onclick="closeForm()">취소</button>
+                    <button type="button" class="danger" id="deleteBtn" onclick="deleteItem()" hidden>삭제</button>
+                    <button type="submit" class="primary" id="submitBtn">등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <dialog id="attachmentPreview" class="attachment-preview" aria-labelledby="attachmentPreviewName">
+        <form method="dialog">
+            <strong id="attachmentPreviewName"></strong>
+            <button type="submit" autofocus>닫기</button>
+        </form>
+        <img id="attachmentPreviewImage" alt="">
+    </dialog>
+
+    <!-- 구글 드라이브 설정 모달 -->
+    <div class="modal" id="driveModal">
+        <div class="dialog">
+            <h2>
+                <span>구글 드라이브 연동 설정</span>
+                <button type="button" onclick="closeDriveModal()"
+                    style="border:0;background:none;font-size:18px;cursor:pointer">✕</button>
+            </h2>
+
+            <div class="tabs">
+                <button type="button" id="tabGasBtn" class="tab-btn active" onclick="switchDriveTab('gas')">방법 1. 구글 웹 앱
+                    연동 (추천 ⭐)</button>
+                <button type="button" id="tabFileBtn" class="tab-btn" onclick="switchDriveTab('file')">방법 2. PC 구글 드라이브
+                    파일 연결</button>
+            </div>
+
+            <!-- 탭 1: Google Apps Script 웹 앱 방식 -->
+            <div id="tabGasContent">
+                <div class="guide-box">
+                    <strong>구글 스프레드시트 실시간 동기화 설정 방법 (약 1분 소요):</strong>
+                    <ol>
+                        <li>연동할 Google 스프레드시트를 열고 주소의 <code>/d/</code>와 <code>/edit</code> 사이에 있는 스프레드시트 ID를 복사합니다.</li>
+                        <li>상단 메뉴 <strong>[확장 프로그램] -> [Apps Script]</strong>를 클릭합니다.</li>
+                        <li>아래 <strong>[배포용 스크립트 코드 복사]</strong> 버튼으로 코드를 붙여넣고, <code>SPREADSHEET_ID</code>의 빈 따옴표 안에 복사한 시트 ID를 입력한 뒤 저장합니다.</li>
+                        <li>기존 웹 앱은 <strong>[배포] → [배포 관리] → [수정] → [새 버전]</strong>으로 업데이트하면 같은 URL을 사용할 수 있습니다. 새로 연결할 때는 <strong>[새 배포] → [웹 앱]</strong>을 선택합니다.</li>
+                        <li>설정: 실행자 <code>[나]</code>, 액세스 권한 <code>[모든 사용자(Anyone)]</code> 필수 선택 후 <strong>[배포]</strong>
+                            클릭</li>
+                        <li>생성된 <strong>웹 앱 URL</strong>을 아래 입력창에 넣고 [연결 테스트 & 동기화]를 누르면 끝!</li>
+                    </ol>
+                    <p>이미지 동기화에는 아래 v1.3.2 스크립트가 필요합니다. 첨부 이미지는 웹 앱의 기존 액세스 범위로 공유됩니다.</p>
+                    <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+                        <button type="button" class="primary" style="padding:6px 12px;font-size:12px"
+                            onclick="copyGasCode()">📋 배포용 스크립트 코드 복사</button>
+                        <small id="copyNotice" style="color:#10b981;font-weight:600;display:none">클립보드에 복사되었습니다!</small>
+                    </div>
+                    <details id="gasCodeDetails" style="margin-top:8px">
+                        <summary>배포용 스크립트 직접 보기</summary>
+                        <textarea id="gasCodeText" rows="7" readonly aria-label="Google Apps Script 배포 코드" spellcheck="false"
+                            style="width:100%;margin-top:6px;font:12px monospace"></textarea>
+                    </details>
+                </div>
+
+                <div class="field wide" style="margin-bottom:12px;">
+                    <label>Google Apps Script 웹 앱 URL</label>
+                    <input id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec"
+                        style="font-family:monospace;font-size:13px">
+                </div>
+
+                <div class="field wide" style="margin-bottom:16px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:normal">
+                        <input type="checkbox" id="autoSyncCheck" checked style="width:auto">
+                        프로젝트 등록 / 수정 / 삭제 시 구글 드라이브에 실시간 자동 저장
+                    </label>
+                </div>
+
+                <div
+                    style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;border-top:1px solid #eef2f6;padding-top:16px;">
+                    <button type="button" class="danger" onclick="disconnectDrive()">연동 해제</button>
+                    <div style="display:flex;gap:8px;">
+                        <button type="button" onclick="closeDriveModal()">닫기</button>
+                        <button type="button" class="success" onclick="testAndSaveGas()">연결 테스트 & 동기화</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 탭 2: PC 구글 드라이브 로컬 파일 연결 방식 (File System API) -->
+            <div id="tabFileContent" style="display:none;">
+                <div class="guide-box">
+                    <strong>PC용 구글 드라이브(Google Drive for Desktop) 파일 직접 연결:</strong>
+                    <p style="margin:6px 0 0">
+                        PC에 구글 드라이브 앱이 설치되어 있다면(예: <code>G:\내 드라이브</code>), 구글 드라이브 내의 JSON 파일을 직접 선택하여 등록 시마다 자동 덮어쓰기
+                        저장할 수 있습니다.
+                    </p>
+                </div>
+
+                <div style="margin:16px 0;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:8px">현재 연결된 파일 상태:</div>
+                    <div id="fileSyncStatus" style="font-size:13px;color:#64748b;font-family:monospace">연결된 로컬 구글 드라이브
+                        파일 없음</div>
+                </div>
+
+                <button type="button" class="primary" onclick="connectLocalDriveFile()">📁 구글 드라이브 폴더의 파일 선택 /
+                    생성</button>
+
+                <div
+                    style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px;border-top:1px solid #eef2f6;padding-top:16px;">
+                    <button type="button" onclick="closeDriveModal()">닫기</button>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section id="timeline" class="fade-in">
-        <div class="container">
-            <div class="section-header"><h2 class="section-title">Career Path</h2><p class="section-subtitle">제조 품질에서 SW DQA, 차량 AI 검증까지 확장된 품질 경력</p></div>
-            <div class="timeline-container">
-                <div class="timeline-line"></div><div class="timeline-progress"></div>
-                <div class="timeline-item" data-category="work"><div class="timeline-node">🏭</div><div class="timeline-content"><div class="timeline-year">2009.09 – 2012.03</div><h3 class="timeline-title">품질파트 O/S Check</h3><div class="timeline-company">스템코㈜</div><p class="timeline-description">COF 제조공정의 O/S Check 품질을 모니터링하고 불량 데이터를 통계적으로 분석하여 이상징후 탐지와 유형 분류를 수행했습니다.</p><div class="timeline-skills"><span class="timeline-skill">공정품질</span><span class="timeline-skill">통계 분석</span><span class="timeline-skill">수율 안정화</span></div><div class="timeline-achievements"><div class="timeline-achievement">제조부·검사부 협업을 통한 공정품질 안정화</div><div class="timeline-achievement">불량 데이터 기반 이상 징후 조기 탐지</div></div></div></div>
-                <div class="timeline-item" data-category="work"><div class="timeline-node">📺</div><div class="timeline-content"><div class="timeline-year">2012.04 – 2021.12</div><h3 class="timeline-title">HE SW개발품질보증팀 DQA</h3><div class="timeline-company">LG전자㈜</div><p class="timeline-description">글로벌 Smart TV 제품의 개발 전 단계에 걸친 SW 품질보증을 수행하고, 결함관리·RCA·CAPA를 통해 품질 이슈 재발 방지를 주도했습니다.</p><div class="timeline-skills"><span class="timeline-skill">Smart TV</span><span class="timeline-skill">DQA</span><span class="timeline-skill">RCA</span><span class="timeline-skill">CAPA</span></div><div class="timeline-achievements"><div class="timeline-achievement">9년간 다수 글로벌 출시 프로젝트 DQA 담당</div><div class="timeline-achievement">End-to-End 개발품질 관리 및 품질 프로세스 개선 기여</div></div></div></div>
-                <div class="timeline-item" data-category="education"><div class="timeline-node">🎓</div><div class="timeline-content"><div class="timeline-year">2022.01 – 2022.12</div><h3 class="timeline-title">재충전 및 학사학위 취득 준비</h3><div class="timeline-company">전자공학 학사과정 · 구직활동 병행</div><p class="timeline-description">자녀 양육과 전자공학 학사과정 이수에 집중하며 다음 커리어 전환을 준비했습니다.</p><div class="timeline-skills"><span class="timeline-skill">전자공학</span><span class="timeline-skill">경력 재정비</span></div></div></div>
-                <div class="timeline-item" data-category="work"><div class="timeline-node">🚗</div><div class="timeline-content"><div class="timeline-year">2023.01 – 현재</div><h3 class="timeline-title">개발검증팀 QA/QC</h3><div class="timeline-company">AImatics</div><p class="timeline-description">차량 AI 기반 ADAS·DMS 제품의 검증체계를 신규 구축하고, SOP·결함 등급 체계·검증 자동화 환경을 표준 업무 프로세스로 정착시키고 있습니다.</p><div class="timeline-skills"><span class="timeline-skill">ADAS</span><span class="timeline-skill">DMS</span><span class="timeline-skill">SOP</span><span class="timeline-skill">검증 자동화</span></div><div class="timeline-achievements"><div class="timeline-achievement">ADAS·DMS 검증 기준 신규 수립</div><div class="timeline-achievement">야간 무인 테스트로 일 4시간 이상 추가 검증 시간 확보</div></div></div></div>
-            </div>
-        </div>
-    </section>
+    <!-- 알림 토스트 -->
 
-    <section id="portfolio" class="fade-in">
-        <div class="container">
-            <div class="section-header"><h2 class="section-title">Featured Projects</h2><p class="section-subtitle">PPT 포트폴리오의 핵심 프로젝트를 웹 섹션으로 재구성했습니다.</p></div>
-            <div class="portfolio-grid qa-project-grid">
-                <div class="portfolio-card"><div class="portfolio-image project-ai"><span>ADAS · DMS</span></div><div class="portfolio-content"><h3 class="portfolio-title">차량 AI 검증체계 구축 및 표준화</h3><p class="portfolio-description">검증 기준이 부재했던 차량 AI 기반 ADAS·DMS 제품군에 검증 프로세스, 검증 항목, 절차 기준을 신규 설계하여 팀 표준 업무 프로세스로 정착했습니다.</p><div class="portfolio-tags"><span class="tag">검증체계</span><span class="tag">표준화</span><span class="tag">ADAS</span><span class="tag">DMS</span></div></div></div>
-                <div class="portfolio-card"><div class="portfolio-image project-auto"><span>Automation</span></div><div class="portfolio-content"><h3 class="portfolio-title">검증 자동화 & 야간 무인 테스트</h3><p class="portfolio-description">수동 검증 절차를 자동화 도구로 전환하고 퇴근 후에도 테스트가 수행되는 환경을 구축하여 별도 인력 투입 없이 일 최소 4시간 이상의 검증 시간을 확보했습니다.</p><div class="portfolio-tags"><span class="tag">검증 자동화</span><span class="tag">무인 테스트</span><span class="tag">효율 개선</span></div></div></div>
-                <div class="portfolio-card"><div class="portfolio-image project-sop"><span>SOP · CAPA</span></div><div class="portfolio-content"><h3 class="portfolio-title">품질 업무표준 및 결함 등급 체계</h3><p class="portfolio-description">검증·품질 업무 전반에 적용되는 SOP를 제정하고, 결함 심각도와 영향도에 따른 등급 체계를 수립하여 일관된 결함 대응 프로세스를 확립했습니다.</p><div class="portfolio-tags"><span class="tag">SOP</span><span class="tag">결함 등급</span><span class="tag">CAPA</span></div></div></div>
-                <div class="portfolio-card"><div class="portfolio-image project-tv"><span>Smart TV DQA</span></div><div class="portfolio-content"><h3 class="portfolio-title">글로벌 Smart TV 개발품질보증</h3><p class="portfolio-description">LG전자 HE SW개발품질보증팀에서 글로벌 Smart TV 제품의 End-to-End SW 품질보증을 수행하고 RCA·CAPA 중심의 재발 방지 체계를 운영했습니다.</p><div class="portfolio-tags"><span class="tag">DQA</span><span class="tag">Smart TV</span><span class="tag">RCA</span><span class="tag">출시 품질</span></div></div></div>
-            </div>
-        </div>
-    </section>
 
-    <section id="skills" class="fade-in qa-skills-section">
-        <div class="container">
-            <div class="section-header"><h2 class="section-title">Technical Skills</h2><p class="section-subtitle">QA/QC, DQA, 자동화, 협업 도구와 도메인 경험</p></div>
-            <div class="skill-category-grid">
-                <div class="skill-category"><h3>품질</h3><p>QA · DQA · V&V · 테스트 계획 수립 · 테스트 전략 · 회귀 테스트 · 품질 게이트 운영 · 결함 관리 · RCA · CAPA · 출시 품질 관리</p></div>
-                <div class="skill-category"><h3>프로세스 · 리더십</h3><p>모델 관리 · 품질 거버넌스 · 개발 프로세스 감사 · 협력사 CAPA 관리 · 글로벌 이슈 관리 · 유관부서 협업</p></div>
-                <div class="skill-category"><h3>자동화</h3><p>검증 자동화 · 신뢰성 시험 자동화 · Jira API 연동 · 업무 프로세스 자동화</p></div>
-                <div class="skill-category"><h3>사용 Tool</h3><p>Jira · Confluence · MS Office · SharePoint · Teams · Slack</p></div>
-                <div class="skill-category"><h3>도메인</h3><p>Smart TV · 임베디드 소프트웨어 · 차량용 AI · ADAS · DMS · 펌웨어 검증 · OTA 검증</p></div>
-                <div class="skill-category"><h3>자격 · 학력</h3><p>전자공학 학사 · 고급 Google 애널리틱스 · TRIZ · 한자실력급수 3급 · 워드프로세서 3급</p></div>
-            </div>
-        </div>
-    </section>
+    <script>
+        'use strict';
 
-    <section id="contact" class="fade-in">
-        <div class="container">
-            <hr class="section-divider">
-            <div class="section-header"><h2 class="section-title">Contact</h2><p class="section-subtitle">품질을 시스템화하는 QA/QC 전문가가 필요하시면 연락 주세요.</p></div>
-            <div class="contact-content">
-                <div class="contact-info"><h3>지영섭</h3><p>Quality Assurance Specialist<br>프로세스 설계 · 표준화 · 자동화 · 품질 거버넌스</p><div class="contact-details"><h4>Contact</h4><p>☎ 010-5586-0202</p><p>✉ <a href="mailto:ibis2002@naver.com">ibis2002@naver.com</a></p><p>📍 경기도 오산시</p></div><div class="download-links"><a href="downloads/resume.docx">이력서 DOCX</a><a href="downloads/portfolio.pptx">포트폴리오 PPTX</a></div></div>
-                <div class="contact-form-container"><form class="contact-form"><div class="form-group"><input type="text" class="form-input" placeholder="이름" required></div><div class="form-group"><input type="email" class="form-input" placeholder="연락처/이메일" required></div><div class="form-group"><input type="text" class="form-input" placeholder="제목" required></div><div class="form-group"><textarea class="form-textarea" rows="5" placeholder="내용을 입력하세요." required></textarea></div><button type="submit" class="submit-btn">Send</button></form></div>
-            </div>
-        </div>
-    </section>
+        const KEY = 'ys-project-dashboard-v1';
+        const DIRTY_KEY = KEY + '-pending-sync';
+        const GD_CONFIG_KEY = 'ys-project-dashboard-gd-config';
+        const VERSION = '1.3.2';
+        const palette = ['#4777ed', '#e8a33e', '#18a58c', '#a46bd5', '#dc6483', '#55889e', '#8eac40'];
+        const COMPLETE_COLOR = '#626262';
+        const DAY_W = 46;
+        const MAX_ATTACHMENTS = 3;
+        const MAX_IMAGE_CHARS = 36000;
+        const MAX_TOTAL_IMAGE_CHARS = 2000000;
+        const MAX_IMAGE_NAME = 100;
+        const MAX_ORIGINAL_BYTES = 10 * 1024 * 1024;
 
-    <footer><div class="footer-bottom"><p class="footer-copyright">© 2026 Youngseob Ji. Quality Assurance Portfolio.</p></div></footer>
-    <script src="tooplate-titan-script.js"></script>
+        let pendingCloudSave = false;
+        let data = load();
+        let editing = null;
+        let attachmentDraft = null;
+        let formType = 'project';
+        let anchor = null;
+        let dragging = false;
+        let dragMoved = false;
+        let lastPointerType = 'mouse';
+        let monthCursor = new Date();
+        let viewStart = startOfDay(new Date());
+        viewStart.setDate(viewStart.getDate() - 7);
+
+        // 구글 드라이브 연동 상태
+        let gdConfig = loadGdConfig();
+        let localFileHandle = null;
+        let localFileWrite = Promise.resolve();
+        let cloudImageSchema = 0;
+        let isSyncing = false;
+        let isLoading = false;
+        let localRevision = 0;
+
+        // -------------------------------------------------------------
+        // 구글 앱스 스크립트 배포용 코드 원본
+        // -------------------------------------------------------------
+        const GAS_TEMPLATE_CODE = `const SPREADSHEET_ID = "";
+const SHEET_PROJECTS = "프로젝트";
+const SHEET_TASKS = "하위업무";
+
+function getSpreadsheet() {
+  if (!SPREADSHEET_ID) throw Error("Apps Script에 스프레드시트 ID를 설정하세요.");
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
+
+function formatDate(val) {
+  if (!val) return "";
+  if (val instanceof Date) {
+    return val.getFullYear() + "-" + String(val.getMonth() + 1).padStart(2, "0") + "-" + String(val.getDate()).padStart(2, "0");
+  }
+  var s = String(val).trim();
+  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) return s;
+  var d = new Date(s);
+  return !isNaN(d.getTime()) ? d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") : s;
+}
+
+const VERSION = "${VERSION}";
+const MAX_ATTACHMENTS = ${MAX_ATTACHMENTS};
+const MAX_IMAGE_CHARS = ${MAX_IMAGE_CHARS};
+const MAX_TOTAL_IMAGE_CHARS = ${MAX_TOTAL_IMAGE_CHARS};
+const MAX_IMAGE_NAME = ${MAX_IMAGE_NAME};
+const IMAGE_HEADERS = ["첨부 이미지 1", "첨부 이미지 2", "첨부 이미지 3"];
+const PROJECT_HEADERS = ["프로젝트 ID", "프로젝트명", "담당자", "시작일", "종료일", "진행상태", "색상", "메모", "최종수정일시"];
+const TASK_HEADERS = ["업무 ID", "소속 프로젝트 ID", "업무명", "담당자", "시작일", "종료일", "진행상태", "메모", "최종수정일시"];
+
+${validAttachment.toString()}
+
+function readRows(sheet) {
+  if (!sheet) return [];
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+  const width = Math.min(sheet.getMaxColumns(), 12);
+  const [header, ...rows] = sheet.getRange(1, 1, lastRow, width).getValues();
+  if (IMAGE_HEADERS.every((label, index) => header[9 + index] === label)) return rows;
+  return rows.map(row => row.slice(0, 9));
+}
+
+function storedImages(row) {
+  return row.slice(9, 12).filter(Boolean).map(cell => {
+    const image = JSON.parse(cell);
+    if (!validAttachment(image)) throw Error("시트에 올바르지 않은 첨부 이미지가 있습니다.");
+    return image;
+  });
+}
+
+function withSheetLock(work) {
+  const lock = LockService.getScriptLock();
+  let result;
+  try {
+    lock.waitLock(15000);
+    result = { status: "success", imageSchema: 1, ...work() };
+  } catch (err) {
+    result = { status: "error", message: err.message };
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
+  }
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet() {
+  return withSheetLock(() => {
+    const ss = getSpreadsheet();
+    const projects = readRows(ss.getSheetByName(SHEET_PROJECTS)).filter(row => row[0] && row[1]).map(row => ({
+      id: String(row[0]), name: String(row[1]), owner: String(row[2] || ""),
+      start: formatDate(row[3]), end: formatDate(row[4]), status: String(row[5] || "대기"),
+      color: String(row[6] || "#4777ed"), memo: String(row[7] || ""), images: storedImages(row)
+    }));
+    const tasks = readRows(ss.getSheetByName(SHEET_TASKS)).filter(row => row[0] && row[2]).map(row => ({
+      id: String(row[0]), projectId: String(row[1]), name: String(row[2]), owner: String(row[3] || ""),
+      start: formatDate(row[4]), end: formatDate(row[5]), status: String(row[6] || "대기"),
+      memo: String(row[7] || ""), images: storedImages(row)
+    }));
+    return { source: "google_spreadsheet", sheetName: ss.getName(), data: { version: VERSION, projects, tasks } };
+  });
+}
+
+function doPost(e) {
+  return withSheetLock(() => {
+    const parsed = JSON.parse(e.postData.contents);
+    if (!Array.isArray(parsed?.projects) || !Array.isArray(parsed?.tasks)) throw Error("유효한 대시보드 데이터 포맷이 아닙니다.");
+    const ss = getSpreadsheet();
+    const pSheet = ss.getSheetByName(SHEET_PROJECTS);
+    const tSheet = ss.getSheetByName(SHEET_TASKS);
+    const now = new Date().toISOString();
+    let imageChars = 0;
+
+    function rowsWithImages(sheet, headers, items, valuesFor) {
+      const saved = new Map(readRows(sheet).filter(row => row[0]).map(row => [String(row[0]), row]));
+      return [headers.concat(IMAGE_HEADERS), ...items.map(item => {
+        const previous = saved.get(String(item.id));
+        const images = item.images === undefined ? (previous ? storedImages(previous) : []) : item.images;
+        if (!Array.isArray(images) || images.length > MAX_ATTACHMENTS || !images.every(validAttachment)) {
+          throw Error("첨부 이미지 형식 또는 개수 제한을 확인하세요.");
+        }
+        const cells = images.map(image => {
+          imageChars += image.dataUrl.length + image.name.length;
+          return JSON.stringify({ name: image.name, dataUrl: image.dataUrl });
+        });
+        while (cells.length < MAX_ATTACHMENTS) cells.push("");
+        return valuesFor(item).concat(cells);
+      })];
+    }
+
+    const pRows = rowsWithImages(pSheet, PROJECT_HEADERS, parsed.projects, p =>
+      [p.id, p.name, p.owner, p.start, p.end, p.status, p.color || "#4777ed", p.memo || "", now]);
+    const tRows = rowsWithImages(tSheet, TASK_HEADERS, parsed.tasks, t =>
+      [t.id, t.projectId, t.name, t.owner, t.start, t.end, t.status, t.memo || "", now]);
+    if (imageChars > MAX_TOTAL_IMAGE_CHARS) throw Error("대시보드의 전체 첨부 이미지 용량을 초과했습니다.");
+
+    try {
+      writeRows(pSheet || ss.insertSheet(SHEET_PROJECTS), pRows, "#1d4ed8");
+      writeRows(tSheet || ss.insertSheet(SHEET_TASKS), tRows, "#047857");
+    } finally {
+      SpreadsheetApp.flush();
+    }
+    return { spreadsheetName: ss.getName(), updatedAt: now };
+  });
+}
+
+function writeRows(sheet, rows, color) {
+  const width = rows[0].length;
+  const maxColumns = sheet.getMaxColumns();
+  const maxRows = sheet.getMaxRows();
+  if (maxColumns < width) sheet.insertColumnsAfter(maxColumns, width - maxColumns);
+  if (maxRows < rows.length) sheet.insertRowsAfter(maxRows, rows.length - maxRows);
+  const lastRow = sheet.getLastRow();
+  while (rows.length < lastRow) rows.push(Array(width).fill(""));
+  sheet.getRange(1, 1, rows.length, width).setValues(rows);
+  formatHeaderRow(sheet, width, color);
+}
+
+function formatHeaderRow(sheet, numCols, bgColor) {
+  var hr = sheet.getRange(1, 1, 1, numCols);
+  hr.setBackground(bgColor);
+  hr.setFontColor("#ffffff");
+  hr.setFontWeight("bold");
+  hr.setHorizontalAlignment("center");
+  sheet.setFrozenRows(1);
+}`;
+
+        async function copyGasCode() {
+            try {
+                await navigator.clipboard.writeText(GAS_TEMPLATE_CODE);
+                const notice = document.getElementById('copyNotice');
+                notice.style.display = 'inline';
+                setTimeout(() => { notice.style.display = 'none'; }, 3000);
+                showToast('배포용 스크립트 코드가 복사되었습니다! Google Apps Script에 붙여넣으세요.');
+            } catch {
+                document.getElementById('gasCodeDetails').open = true;
+                const code = document.getElementById('gasCodeText');
+                code.focus();
+                code.select();
+                showToast('선택된 스크립트 코드를 Ctrl+C로 복사하세요.', true);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 날짜 및 유틸 함수
+        // -------------------------------------------------------------
+        function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+        function iso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+        function cleanDate(s) {
+            if (!s) return '';
+            s = String(s).trim();
+            if (s.includes('T')) s = s.split('T')[0];
+            s = s.replace(/[\.\/]/g, '-');
+            let m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+            return m ? `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}` : s;
+        }
+        function date(s) {
+            let [y, m, d] = cleanDate(s).split('-').map(Number);
+            return new Date(y, (m || 1) - 1, d || 1);
+        }
+        function add(d, n) { let x = new Date(d); x.setDate(x.getDate() + n); return x; }
+        function days(a, b) { return Math.round((startOfDay(b) - startOfDay(a)) / 86400000); }
+
+        function progress(start, end) {
+            if (!start || !end || start > end) return 0;
+            const today = startOfDay(new Date()), a = date(start), b = date(end);
+            if (today < a) return 0;
+            if (today >= b) return 100;
+            const total = days(a, b);
+            return total <= 0 ? 100 : Math.max(0, Math.min(100, Math.round(days(a, today) / total * 100)));
+        }
+
+        function updateProgressPreview() {
+            const start = document.getElementById('start').value, end = document.getElementById('end').value, p = progress(start, end);
+            document.getElementById('progressFill').style.width = p + '%';
+            document.getElementById('progressValue').textContent = p + '%';
+            document.getElementById('progressExplanation').textContent = start && end && start <= end
+                ? `오늘(${iso(new Date())}) 기준 · 시작 ${start} / 종료 ${end} · 계획상 ${p}% 진행`
+                : '시작일과 종료일을 올바르게 입력하세요.';
+        }
+
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function uid() {
+            return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).substring(2, 9);
+        }
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show ' + (isError ? 'error' : 'success');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => { t.className = 'toast'; }, 3200);
+        }
+
+        function validAttachment(image) {
+            return !!image && typeof image.name === 'string' && image.name.length > 0 && image.name.length <= MAX_IMAGE_NAME
+                && typeof image.dataUrl === 'string' && image.dataUrl.length <= MAX_IMAGE_CHARS
+                && /^data:image\/(?:webp|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/.test(image.dataUrl);
+        }
+
+        function validateAttachments(snapshot) {
+            let size = 0;
+            for (const item of [...snapshot.projects, ...snapshot.tasks]) {
+                if (item.images === undefined) continue;
+                if (!Array.isArray(item.images) || item.images.length > MAX_ATTACHMENTS || !item.images.every(validAttachment)) {
+                    throw Error('첨부 이미지의 형식 또는 개수 제한을 확인하세요.');
+                }
+                for (const image of item.images) size += image.dataUrl.length + image.name.length;
+            }
+            if (size > MAX_TOTAL_IMAGE_CHARS) throw Error('전체 첨부 이미지 용량을 초과했습니다. 다른 첨부를 삭제한 뒤 다시 시도하세요.');
+        }
+
+        function mapItems(snapshot, transform) {
+            return { ...snapshot, projects: snapshot.projects.map(transform), tasks: snapshot.tasks.map(transform) };
+        }
+
+        function withoutPendingImages(snapshot) {
+            return mapItems(snapshot, ({ imagesPending, ...item }) => item);
+        }
+
+        function hasPendingImages() {
+            return data.projects.some(item => item.imagesPending) || data.tasks.some(item => item.imagesPending);
+        }
+
+        async function encodeAttachment(file) {
+            if (file.size > MAX_ORIGINAL_BYTES) throw Error('원본이 10MB를 초과합니다.');
+            const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+            const ascii = String.fromCharCode(...bytes);
+            const isJpeg = bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
+            const isPng = ascii.startsWith('\x89PNG\r\n\x1a\n');
+            const isWebp = ascii.startsWith('RIFF') && ascii.slice(8) === 'WEBP';
+            if (!isJpeg && !isPng && !isWebp) throw Error('JPG, PNG 또는 WebP 파일을 선택하세요.');
+
+            let bitmap;
+            try {
+                bitmap = await createImageBitmap(file);
+            } catch {
+                throw Error('이미지를 열 수 없습니다.');
+            }
+            try {
+                if (bitmap.width * bitmap.height > 40_000_000) throw Error('원본 해상도가 4,000만 픽셀을 초과합니다.');
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const webp = canvas.toDataURL('image/webp').startsWith('data:image/webp;');
+                for (const maxSide of [720, 540, 400, 300, 220, 160]) {
+                    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+                    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+                    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+                    if (!webp) {
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }
+                    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                    for (const quality of [0.82, 0.66, 0.5]) {
+                        const dataUrl = canvas.toDataURL(webp ? 'image/webp' : 'image/jpeg', quality);
+                        if (dataUrl.length <= MAX_IMAGE_CHARS) return { name: file.name.slice(0, MAX_IMAGE_NAME), dataUrl };
+                    }
+                }
+                throw Error('저장 한도까지 이미지를 줄일 수 없습니다.');
+            } finally {
+                bitmap.close();
+            }
+        }
+
+        function showAttachmentMessage(message, isError = false) {
+            const status = document.getElementById('attachmentMessage');
+            status.textContent = message;
+            status.classList.toggle('error', isError);
+        }
+
+        function renderAttachments() {
+            const list = document.getElementById('attachmentList');
+            const images = attachmentDraft?.images || [];
+            list.hidden = !images.length;
+            list.innerHTML = images.map(({ name, dataUrl }, index) => `
+                <li>
+                    <button type="button" class="attachment-thumb" data-preview="${index}" aria-label="${esc(name)} 미리보기">
+                        <img src="${dataUrl}" alt="">
+                    </button>
+                    <div class="attachment-meta">
+                        <span title="${esc(name)}">${esc(name)}</span>
+                        <button type="button" data-remove="${index}" aria-label="${esc(name)} 첨부 삭제">삭제</button>
+                    </div>
+                </li>`).join('');
+            document.getElementById('imageFiles').disabled = !!attachmentDraft?.processing;
+            document.getElementById('submitBtn').disabled = !!attachmentDraft?.processing;
+            document.getElementById('attachmentStorage').textContent = gdConfig.mode === 'file'
+                ? '브라우저와 JSON 백업에 포함되며, 연결된 JSON 파일에도 저장할 수 있습니다.'
+                : cloudImageSchema === 1
+                ? '저장하면 브라우저와 JSON 백업에 포함되며, Google Sheets에도 동기화할 수 있습니다.'
+                : '브라우저와 JSON 백업에 저장됩니다. Google Sheets 공유에는 v1.3.2 스크립트가 필요합니다.';
+        }
+
+        async function addAttachments(event) {
+            const draft = attachmentDraft;
+            if (!draft || draft.processing) return;
+            const input = event.target;
+            const files = Array.from(input.files);
+            input.value = '';
+            if (!files.length) return;
+            const slots = MAX_ATTACHMENTS - draft.images.length;
+            const messages = [];
+            if (files.length > slots) messages.push('항목당 이미지는 최대 3장입니다.');
+            if (!slots) {
+                showAttachmentMessage(messages[0], true);
+                return;
+            }
+            draft.processing = true;
+            showAttachmentMessage('이미지를 불러오는 중입니다.');
+            renderAttachments();
+            try {
+                for (const file of files.slice(0, slots)) {
+                    try {
+                        const image = await encodeAttachment(file);
+                        if (attachmentDraft !== draft) return;
+                        draft.images.push(image);
+                        draft.changed = true;
+                    } catch (error) {
+                        messages.push(file.name + ' · ' + error.message);
+                    }
+                }
+            } finally {
+                if (attachmentDraft === draft) {
+                    draft.processing = false;
+                    renderAttachments();
+                    showAttachmentMessage(messages.join(' '), !!messages.length);
+                }
+            }
+        }
+
+        function handleAttachmentClick(event) {
+            const button = event.target.closest('button');
+            if (!button || !attachmentDraft) return;
+            if (button.dataset.remove !== undefined) {
+                const index = Number(button.dataset.remove);
+                attachmentDraft.images.splice(index, 1);
+                attachmentDraft.changed = true;
+                renderAttachments();
+                const remaining = document.querySelectorAll('#attachmentList [data-remove]');
+                (remaining[Math.min(index, remaining.length - 1)] || document.getElementById('imageFiles')).focus();
+                showAttachmentMessage('첨부를 목록에서 삭제했습니다. 저장하면 반영됩니다.');
+            } else {
+                const image = attachmentDraft.images[Number(button.dataset.preview)];
+                document.getElementById('attachmentPreviewName').textContent = image.name;
+                const preview = document.getElementById('attachmentPreviewImage');
+                preview.alt = image.name;
+                preview.src = image.dataUrl;
+                document.getElementById('attachmentPreview').showModal();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 로컬 저장 및 설정
+        // -------------------------------------------------------------
+        function load() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(KEY));
+                if (Array.isArray(stored?.projects) && Array.isArray(stored?.tasks)) {
+                    const { pendingCloudSave: pending, ...snapshot } = stored;
+                    validateAttachments(snapshot);
+                    pendingCloudSave = pending ?? (localStorage.getItem(DIRTY_KEY) === 'true');
+                    return { ...snapshot, version: VERSION };
+                }
+            } catch {
+                // Storage may be blocked for local files or private browsing.
+            }
+            return { version: VERSION, projects: [], tasks: [] };
+        }
+
+        function loadGdConfig() {
+            try {
+                let cfg = JSON.parse(localStorage.getItem(GD_CONFIG_KEY));
+                if (cfg && typeof cfg === 'object') {
+                    if (typeof cfg.gasUrl !== 'string') cfg.gasUrl = '';
+                    return cfg;
+                }
+                return { gasUrl: '', autoSync: true, lastSync: '', mode: 'gas' };
+            } catch {
+                return { gasUrl: '', autoSync: true, lastSync: '', mode: 'gas' };
+            }
+        }
+
+        function saveGdConfig() {
+            try {
+                localStorage.setItem(GD_CONFIG_KEY, JSON.stringify(gdConfig));
+            } catch (e) {
+                console.warn('설정 저장 실패', e);
+            }
+        }
+
+        function setCloudStatus(type, text) {
+            const badge = document.getElementById('cloudBadge');
+            const txt = document.getElementById('cloudStatusText');
+            badge.className = 'cloud-badge ' + type;
+            txt.textContent = text;
+            showToast(text, type === 'error');
+        }
+
+        // -------------------------------------------------------------
+        // 핵심 데이터 저장 (로컬 + 구글 드라이브 자동 동기화)
+        // -------------------------------------------------------------
+        function storeSnapshot(snapshot, pending) {
+            localStorage.setItem(KEY, JSON.stringify({ ...snapshot, pendingCloudSave: pending }));
+            data = snapshot;
+            pendingCloudSave = pending;
+        }
+
+        function persist(next) {
+            validateAttachments(next);
+            storeSnapshot({ ...next, version: VERSION, updatedAt: new Date().toISOString() }, true);
+            localRevision++;
+            if (gdConfig.autoSync !== false) {
+                if (gdConfig.mode === 'file') syncToLocalDriveFile();
+                else if (gdConfig.gasUrl) syncToGoogleDrive();
+            }
+        }
+
+        function saveErrorMessage(error) {
+            return ['QuotaExceededError', 'SecurityError'].includes(error.name)
+                ? '브라우저에 저장할 수 없습니다. 저장 공간 또는 사이트 데이터 권한을 확인하세요.'
+                : error.message;
+        }
+
+        // -------------------------------------------------------------
+        // 구글 드라이브 (Apps Script) 동기화 통신
+        // -------------------------------------------------------------
+        async function readCloud(url) {
+            const query = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
+            const result = await (await fetch(query, { cache: 'no-store' })).json();
+            if (result.status !== 'success' || !Array.isArray(result.data?.projects) || !Array.isArray(result.data?.tasks)) {
+                throw Error(result.message || '시트 응답 형식 오류');
+            }
+            return result;
+        }
+
+        function mergeRemote(result) {
+            const schema = result.imageSchema === 1 ? 1 : 0;
+            const remote = result.data;
+            const merge = (local, incoming) => {
+                const indexed = new Map(local.map(item => [item.id, item]));
+                return incoming.map(({ images, imagesPending, ...item }) => {
+                    const saved = indexed.get(item.id);
+                    if (saved?.imagesPending) return { ...item, images: saved.images, imagesPending: true };
+                    if (schema === 1) {
+                        if (!Array.isArray(images)) throw Error('시트의 첨부 이미지 응답 형식 오류');
+                        return { ...item, images };
+                    }
+                    return saved?.images ? { ...item, images: saved.images } : item;
+                });
+            };
+            if (schema === 1 || remote.projects.length || remote.tasks.length || !data.projects.length) {
+                const next = {
+                    version: VERSION,
+                    updatedAt: remote.updatedAt || new Date().toISOString(),
+                    projects: merge(data.projects, remote.projects),
+                    tasks: merge(data.tasks, remote.tasks)
+                };
+                validateAttachments(next);
+                storeSnapshot(next, false);
+                render();
+            }
+            cloudImageSchema = schema;
+        }
+
+        function cloudSaved(message) {
+            gdConfig.lastSync = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'});
+            saveGdConfig();
+            const suffix = cloudImageSchema !== 1 && hasPendingImages() ? ' · 첨부는 브라우저에 저장됨' : '';
+            setCloudStatus('synced', message + ' (' + gdConfig.lastSync + ')' + suffix);
+        }
+
+        async function syncToGoogleDrive() {
+            if (!gdConfig.gasUrl || isSyncing) return false;
+            isSyncing = true;
+            const url = gdConfig.gasUrl;
+            setCloudStatus('syncing', '구글 시트 저장 중...');
+            try {
+                do {
+                    const schema = hasPendingImages() ? (await readCloud(url)).imageSchema : cloudImageSchema;
+                    const revision = localRevision;
+                    // An omitted image field keeps the sheet's current attachments. An empty array deletes them.
+                    const payload = mapItems(data, ({ images, imagesPending, ...item }) =>
+                        schema === 1 && imagesPending ? { ...item, images } : item);
+                    const res = await fetch(url, {
+                        method: 'POST', body: JSON.stringify(payload),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    const result = await res.json();
+                    if (result.status !== 'success') throw Error(result.message || '저장 응답 오류');
+                    cloudImageSchema = result.imageSchema === 1 ? 1 : 0;
+                    if (revision === localRevision) {
+                        const confirmed = schema === 1 && cloudImageSchema === 1 ? withoutPendingImages(data) : data;
+                        storeSnapshot(confirmed, false);
+                    }
+                } while (pendingCloudSave);
+                cloudSaved('구글 시트 저장 완료');
+                return true;
+            } catch (err) {
+                setCloudStatus('error', '시트 저장 실패 · ' + saveErrorMessage(err));
+                return false;
+            } finally { isSyncing = false; }
+        }
+
+        async function loadFromGoogleDrive(isInteractive = false, connecting = false) {
+            if (!gdConfig.gasUrl || isLoading || isSyncing || pendingCloudSave) return false;
+            isLoading = true;
+            const revision = localRevision;
+            setCloudStatus('syncing', '구글 시트 확인 중...');
+            try {
+                const result = await readCloud(gdConfig.gasUrl);
+                if (revision !== localRevision || pendingCloudSave || document.getElementById('modal').classList.contains('show')
+                    || (!connecting && document.getElementById('driveModal').classList.contains('show'))) {
+                    if (!isSyncing) cloudSaved('구글 시트 확인을 미뤘습니다');
+                    return false;
+                }
+                mergeRemote(result);
+                if (cloudImageSchema === 1 && hasPendingImages() && (isInteractive || gdConfig.autoSync !== false)) {
+                    return await syncToGoogleDrive();
+                }
+                cloudSaved('구글 시트 동기화 완료');
+                return true;
+            } catch (err) {
+                setCloudStatus('error', '구글 시트 확인 실패 · ' + saveErrorMessage(err));
+                return false;
+            } finally { isLoading = false; }
+        }
+
+        async function periodicSync() {
+            if (!gdConfig.gasUrl || gdConfig.mode === 'file' || gdConfig.autoSync === false
+                || isSyncing || isLoading || document.querySelector('.modal.show')) return;
+            if (pendingCloudSave) await syncToGoogleDrive();
+            else await loadFromGoogleDrive(false);
+        }
+        const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+        setInterval(periodicSync, AUTO_SYNC_INTERVAL_MS);
+
+        // -------------------------------------------------------------
+        // PC 구글 드라이브 파일 연결 (File System API)
+        // -------------------------------------------------------------
+        async function connectLocalDriveFile() {
+            if (isSyncing || isLoading) return;
+            if (!window.showSaveFilePicker) {
+                alert('사용 중인 브라우저가 File System API를 지원하지 않습니다. Chrome 또는 Edge 브라우저를 이용해주세요.');
+                return;
+            }
+            try {
+                localFileHandle = await window.showSaveFilePicker({
+                    suggestedName: 'project_dashboard_data.json',
+                    types: [{
+                        description: 'JSON Data File',
+                        accept: { 'application/json': ['.json'] }
+                    }]
+                });
+
+                document.getElementById('fileSyncStatus').textContent = `연결됨: ${localFileHandle.name}`;
+                document.getElementById('fileSyncStatus').style.color = '#10b981';
+
+                gdConfig.mode = 'file';
+                saveGdConfig();
+
+                await syncToLocalDriveFile(true);
+                closeDriveModal();
+            } catch (e) {
+                if (e.name !== 'AbortError') alert('파일 연결 오류: ' + e.message);
+            }
+        }
+
+        async function syncToLocalDriveFile(isInteractive = false) {
+            if (!localFileHandle) return;
+            setCloudStatus('syncing', '로컬 구글 드라이브 파일 저장 중...');
+            const handle = localFileHandle;
+            const snapshot = JSON.stringify(withoutPendingImages(data), null, 2);
+            const write = localFileWrite.then(async () => {
+                const writable = await handle.createWritable();
+                await writable.write(snapshot);
+                await writable.close();
+            });
+            localFileWrite = write.catch(() => {});
+            try {
+                await write;
+
+                const nowStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+                setCloudStatus('synced', `로컬 드라이브 저장됨 (${nowStr})`);
+                if (isInteractive) showToast('로컬 구글 드라이브 파일에 저장되었습니다!');
+            } catch (e) {
+                console.error(e);
+                setCloudStatus('error', '파일 저장 오류');
+                if (isInteractive) showToast('파일 저장 실패: ' + e.message, true);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 수동 즉시 동기화 버튼 클릭
+        // -------------------------------------------------------------
+        async function manualSync() {
+            if (isSyncing || isLoading) return;
+            if (gdConfig.mode === 'file') {
+                if (localFileHandle) await syncToLocalDriveFile(true);
+                else openDriveModal();
+            }
+            else if (gdConfig.gasUrl) {
+                if (pendingCloudSave) await syncToGoogleDrive();
+                else await loadFromGoogleDrive(true);
+            } else openDriveModal();
+        }
+
+        // -------------------------------------------------------------
+        // 모달 및 탭 제어
+        // -------------------------------------------------------------
+        function openDriveModal() {
+            document.getElementById('gasUrlInput').value = gdConfig.gasUrl || '';
+            document.getElementById('autoSyncCheck').checked = gdConfig.autoSync !== false;
+            switchDriveTab(gdConfig.mode === 'file' ? 'file' : 'gas');
+            document.getElementById('driveModal').classList.add('show');
+        }
+
+        function closeDriveModal() {
+            document.getElementById('driveModal').classList.remove('show');
+        }
+
+        function switchDriveTab(tab) {
+            const isGas = tab === 'gas';
+            document.getElementById('tabGasBtn').classList.toggle('active', isGas);
+            document.getElementById('tabFileBtn').classList.toggle('active', !isGas);
+            document.getElementById('tabGasContent').style.display = isGas ? 'block' : 'none';
+            document.getElementById('tabFileContent').style.display = !isGas ? 'block' : 'none';
+        }
+
+        async function testAndSaveGas() {
+            if (isSyncing || isLoading) return;
+            const url = document.getElementById('gasUrlInput').value.trim();
+            if (!url.startsWith('https://script.google.com/macros/s/')) {
+                alert('올바른 Google Apps Script 배포 URL을 입력하세요.');
+                return;
+            }
+            const previous = gdConfig;
+            const previousSchema = cloudImageSchema;
+            gdConfig = { ...gdConfig, gasUrl: url, autoSync: document.getElementById('autoSyncCheck').checked, mode: 'gas' };
+            if (previous.gasUrl !== url) cloudImageSchema = 0;
+            if (await (pendingCloudSave ? syncToGoogleDrive() : loadFromGoogleDrive(true, true))) {
+                closeDriveModal();
+            } else {
+                gdConfig = previous;
+                cloudImageSchema = previousSchema;
+                alert('연결 또는 동기화에 실패했습니다. 배포 URL과 웹 앱 액세스 권한을 확인하세요.');
+            }
+        }
+
+        function disconnectDrive() {
+            if (isSyncing || isLoading) return;
+            if (!confirm('구글 드라이브 연동을 해제할까요? (현재 대시보드의 로컬 데이터는 유지됩니다)')) return;
+            gdConfig.gasUrl = '';
+            gdConfig.lastSync = '';
+            gdConfig.mode = 'gas';
+            localFileHandle = null;
+            cloudImageSchema = 0;
+            saveGdConfig();
+            document.getElementById('gasUrlInput').value = '';
+            document.getElementById('fileSyncStatus').textContent = '연결된 로컬 구글 드라이브 파일 없음';
+            document.getElementById('fileSyncStatus').style.color = '#64748b';
+            setCloudStatus('offline', '구글 드라이브 미연동');
+            closeDriveModal();
+            showToast('구글 드라이브 연동이 해제되었습니다.');
+        }
+
+        // -------------------------------------------------------------
+        // 간트차트 렌더링 & 프로젝트 관리 로직
+        // -------------------------------------------------------------
+        function projectDates(p) {
+            // v1.3.1: 프로젝트 일정과 하위 업무 일정을 독립적으로 표시합니다.
+            return { start: cleanDate(p.start), end: cleanDate(p.end) };
+        }
+
+        // Uses the same ordered, filtered rows and normalized dates as the Gantt.
+        // No separate stored state: CRUD, import and cloud refresh all call render().
+        function renderSummary(rows) {
+            const projectsById = new Map(data.projects.map(p => [p.id, p]));
+            document.getElementById('summaryCount').textContent = `· ${rows.length}건`;
+            document.getElementById('summaryBody').innerHTML = rows.length ? rows.map(row => {
+                const item = row.item;
+                const project = row.type === 'project' ? item : projectsById.get(item.projectId);
+                const status = item.status || '대기';
+                const statusClass = ({'진행':'active', '완료':'done', '지연':'delayed', '중단':'stopped'})[status] || '';
+                return `<tr class="${row.complete ? 'is-complete' : ''}">
+                    <td class="summary-project">${esc(project?.name || '—')}</td>
+                    <td class="summary-content">${row.type === 'task' ? '↳ ' : ''}${esc(item.name)}${item.memo ? `<div class="summary-memo">${esc(item.memo)}</div>` : ''}</td>
+                    <td>${esc(item.owner || '—')}</td>
+                    <td class="summary-date">${esc(row.range.start || '—')}</td>
+                    <td class="summary-date">${esc(row.range.end || '—')}</td>
+                    <td><span class="summary-status ${statusClass}">${esc(status)}</span></td>
+                </tr>`;
+            }).join('') : '<tr><td colspan="6" class="empty">표시할 프로젝트 또는 업무가 없습니다.</td></tr>';
+        }
+
+        function render() {
+            const q = document.getElementById('search').value.trim().toLowerCase();
+            const n = Number(document.getElementById('range').value);
+            const today = iso(new Date());
+
+            let projects = data.projects.filter(p =>
+                [p.name, p.owner, ...data.tasks.filter(t => t.projectId === p.id).flatMap(t => [t.name, t.owner])]
+                    .some(x => String(x).toLowerCase().includes(q))
+            );
+
+            let count = s => data.projects.filter(p => p.status === s).length;
+            document.getElementById('stats').innerHTML = [
+                ['전체 프로젝트', data.projects.length],
+                ['완료', count('완료')],
+                ['진행', count('진행')],
+                ['대기', count('대기')],
+                ['전체 하위 업무', data.tasks.length]
+            ].map(([k, v]) => `<div class="tile"><small>${k}</small><b>${v}</b></div>`).join('');
+
+            document.getElementById('period').textContent = `(${iso(viewStart)} ~ ${iso(add(viewStart, n - 1))})`;
+
+            let rows = [];
+            for (const p of projects) {
+                const projectColor = /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : palette[0];
+                rows.push({ type: 'project', item: p, range: projectDates(p), projectColor, complete: p.status === '완료' });
+                for (const t of data.tasks.filter(t => t.projectId === p.id && (!q || [p.name, p.owner, t.name, t.owner].some(x => String(x).toLowerCase().includes(q))))) {
+                    rows.push({ type: 'task', item: t, range: { start: cleanDate(t.start), end: cleanDate(t.end) }, projectColor, complete: t.status === '완료' });
+                }
+            }
+
+            renderSummary(rows);
+
+            if (!rows.length) {
+                document.getElementById('gantt').innerHTML = '<div class="empty">등록된 프로젝트가 없습니다. "+ 프로젝트 등록" 버튼으로 시작하세요.</div>';
+                return;
+            }
+
+            let html = `<div class="gantt-grid" style="--days:${n}; --day-w:${DAY_W}px;"><div class="cell sticky corner">프로젝트 / 하위 업무</div>`;
+            for (let i = 0; i < n; i++) {
+                let d = add(viewStart, i), s = iso(d);
+                let dayOfWeek = d.getDay();
+                let isToday = s === today;
+                let weekendClass = dayOfWeek === 0 ? 'weekend-sun weekend' : dayOfWeek === 6 ? 'weekend-sat weekend' : '';
+                let todayClass = isToday ? 'today' : '';
+                let dayName = isToday ? '오늘' : '일월화수목금토'[dayOfWeek];
+                html += `<div class="cell dayhead ${todayClass} ${weekendClass}"><span class="day-num">${d.getMonth() + 1}/${d.getDate()}</span><span class="day-name">${dayName}</span></div>`;
+            }
+
+            for (let r of rows) {
+                let p = r.item;
+                const color = r.complete ? COMPLETE_COLOR : r.projectColor;
+                const completedClass = r.complete ? 'is-complete' : '';
+                const editAttributes = `data-edit-type="${r.type}" data-edit-id="${esc(p.id)}"`;
+                html += `<div class="cell sticky ${r.type === 'project' ? 'project' : 'taskname'} ${completedClass}">
+      <div class="rowlabel">
+        <span style="color:${color}">●</span>
+        <span class="name" style="${r.type === 'project' || r.complete ? 'color:' + color : ''}" title="${esc(p.name)}">${r.type === 'task' ? '↳ ' : ''}${esc(p.name)}</span>
+        <span class="progress-chip" title="일정 기준 자동 진행률">${progress(p.start, p.end)}%</span>
+        <button type="button" title="수정" ${editAttributes}>수정</button>
+      </div>
+    </div>`;
+
+                let left = days(viewStart, date(r.range.start));
+                let right = days(viewStart, date(r.range.end));
+                if (left > right) [left, right] = [right, left];
+
+                let isVisible = right >= 0 && left < n;
+                let startIndex = isVisible ? Math.max(0, left) : -1;
+                let endIndex = isVisible ? Math.min(n - 1, right) : -1;
+                let spanDays = isVisible ? (endIndex - startIndex + 1) : 0;
+                let barWidth = isVisible ? (spanDays * DAY_W - 6) : 0;
+
+                for (let i = 0; i < n; i++) {
+                    let d = add(viewStart, i), s = iso(d);
+                    let isToday = s === today;
+                    let isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                    html += `<div class="cell barcell ${completedClass} ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}">`;
+                    if (isVisible && i === startIndex && barWidth > 0) {
+                        let barClass = r.type === 'project' ? 'bar bar-project' : 'bar';
+                        html += `<div class="${barClass} ${completedClass}" ${editAttributes} title="${esc(p.name)} | ${esc(r.range.start)} ~ ${esc(r.range.end)} | ${esc(p.owner)} | ${esc(p.status || '대기')} | 계획 진행률 ${progress(p.start, p.end)}% | ${esc(p.memo)}" style="background:${color};width:${barWidth}px;">${esc(p.name)} · ${progress(p.start, p.end)}%</div>`;
+                    }
+                    html += '</div>';
+                }
+            }
+            html += '</div>';
+            document.getElementById('gantt').innerHTML = html;
+        }
+
+        function move(k) {
+            viewStart = add(viewStart, k * Number(document.getElementById('range').value));
+            render();
+        }
+
+        function goToday() {
+            viewStart = add(startOfDay(new Date()), -7);
+            render();
+        }
+
+        // -------------------------------------------------------------
+        // 등록 / 수정 폼 및 달력 제어
+        // -------------------------------------------------------------
+        function openForm(type, id = null) {
+            let item = id ? (type === 'project' ? data.projects : data.tasks).find(x => x.id === id) : null;
+            if (id && !item) return;
+            if (type === 'task' && !data.projects.length) {
+                alert('프로젝트를 먼저 등록하세요.');
+                return;
+            }
+            formType = type;
+            editing = id;
+
+            document.getElementById('form').reset();
+            document.getElementById('parentField').hidden = type === 'project';
+            document.getElementById('colorField').hidden = type !== 'project';
+            document.getElementById('progressField').hidden = type !== 'project';
+            document.getElementById('parent').innerHTML = data.projects.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+
+            document.getElementById('formTitle').textContent = (id ? '수정' : '등록') + ' · ' + (type === 'project' ? '프로젝트' : '하위 업무');
+            document.getElementById('submitBtn').textContent = id ? '수정' : '등록';
+            document.getElementById('deleteBtn').hidden = !id;
+
+            let now = iso(new Date());
+            for (let k of ['name', 'owner', 'memo']) document.getElementById(k).value = item?.[k] || '';
+            document.getElementById('start').value = item?.start || now;
+            document.getElementById('end').value = item?.end || now;
+            document.getElementById('status').value = item?.status || '대기';
+            document.getElementById('color').value = item?.color || palette[data.projects.length % palette.length];
+            if (type === 'task') document.getElementById('parent').value = item?.projectId || data.projects[0].id;
+
+            anchor = null;
+            dragging = false;
+            dragMoved = false;
+            monthCursor = date(document.getElementById('start').value);
+            drawCalendar();
+            updateProgressPreview();
+            attachmentDraft = { images: [...(item?.images || [])], processing: false, changed: false };
+            showAttachmentMessage('');
+            renderAttachments();
+            document.getElementById('modal').classList.add('show');
+            document.querySelector('#modal .dialog').scrollTop = 0;
+        }
+
+        function closeForm() {
+            document.getElementById('attachmentPreview').close();
+            attachmentDraft = null;
+            renderAttachments();
+            document.getElementById('modal').classList.remove('show');
+            dragging = false;
+            anchor = null;
+            dragMoved = false;
+        }
+
+        function syncCalendar() {
+            let s = document.getElementById('start').value;
+            if (s) monthCursor = date(s);
+            anchor = null;
+            drawCalendar();
+            updateProgressPreview();
+        }
+
+        function monthShift(n) {
+            monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + n, 1);
+            drawCalendar();
+        }
+
+        function refreshCalendarSelection() {
+            const a = document.getElementById('start').value, b = document.getElementById('end').value;
+            document.querySelectorAll('#calgrid [data-day]').forEach(el => {
+                const s = el.dataset.day;
+                el.classList.toggle('endpoint', s === a || s === b);
+                el.classList.toggle('selected', s > a && s < b);
+            });
+        }
+
+        function setCalendarRange(a, b) {
+            document.getElementById('start').value = a < b ? a : b;
+            document.getElementById('end').value = a > b ? a : b;
+            refreshCalendarSelection();
+            updateProgressPreview();
+        }
+
+        function calendarPick(s) {
+            if (anchor === null) {
+                anchor = s;
+                setCalendarRange(s, s);
+            } else {
+                setCalendarRange(anchor, s);
+                anchor = null;
+            }
+        }
+
+        function drawCalendar() {
+            document.getElementById('monthLabel').textContent = `${monthCursor.getFullYear()}년 ${monthCursor.getMonth() + 1}월`;
+            let first = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
+            let offset = (first.getDay() + 6) % 7;
+            let last = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+
+            let html = ['월', '화', '수', '목', '금', '토', '일'].map(x => `<small style="text-align:center">${x}</small>`).join('');
+            for (let i = 0; i < offset; i++) html += '<button type="button" class="blank">.</button>';
+            for (let d = 1; d <= last; d++) {
+                let s = iso(new Date(first.getFullYear(), first.getMonth(), d));
+                html += `<button type="button" data-day="${s}" aria-label="${s}">${d}</button>`;
+            }
+
+            let el = document.getElementById('calgrid');
+            el.innerHTML = html;
+            el.querySelectorAll('[data-day]').forEach(b => {
+                const s = b.dataset.day;
+                b.addEventListener('pointerdown', e => {
+                    if (e.pointerType !== 'mouse') return;
+                    e.preventDefault();
+                    if (anchor !== null) {
+                        setCalendarRange(anchor, s);
+                        anchor = null;
+                        dragging = false;
+                        return;
+                    }
+                    anchor = s;
+                    dragging = true;
+                    dragMoved = false;
+                    setCalendarRange(s, s);
+                });
+                b.addEventListener('pointerenter', () => {
+                    if (dragging && anchor !== null) {
+                        dragMoved = true;
+                        setCalendarRange(anchor, s);
+                    }
+                });
+                b.addEventListener('click', e => {
+                    if (e.detail === 0 || lastPointerType !== 'mouse') {
+                        calendarPick(s);
+                    }
+                });
+                b.addEventListener('pointerup', e => {
+                    if (e.pointerType === 'mouse') {
+                        dragging = false;
+                        if (dragMoved) {
+                            anchor = null;
+                            dragMoved = false;
+                        }
+                    }
+                });
+                b.addEventListener('pointerdown', e => { lastPointerType = e.pointerType; });
+            });
+            refreshCalendarSelection();
+        }
+
+        document.addEventListener('pointerup', () => {
+            if (dragMoved) anchor = null;
+            dragging = false;
+            dragMoved = false;
+        });
+
+        // -------------------------------------------------------------
+        // 저장 / 삭제 / JSON 백업 / 복원
+        // -------------------------------------------------------------
+        function save(e) {
+            e.preventDefault();
+            if (!attachmentDraft || attachmentDraft.processing) return;
+            let name = document.getElementById('name').value.trim();
+            let owner = document.getElementById('owner').value.trim();
+            let start = document.getElementById('start').value;
+            let end = document.getElementById('end').value;
+
+            if (!name || !owner || !start || !end) {
+                alert('업무명, 시작/종료 날짜, 담당자는 필수입니다.');
+                return;
+            }
+            if (start > end) {
+                alert('종료일은 시작일보다 빠를 수 없습니다.');
+                return;
+            }
+
+            const key = formType === 'project' ? 'projects' : 'tasks';
+            const collection = [...data[key]];
+            const index = editing ? collection.findIndex(x => x.id === editing) : -1;
+            if (editing && index < 0) return;
+            const previous = collection[index];
+            let item = {
+                id: editing || uid(),
+                name,
+                owner,
+                start,
+                end,
+                memo: document.getElementById('memo').value.trim(),
+                status: document.getElementById('status').value
+            };
+
+            if (formType === 'project') item.color = document.getElementById('color').value;
+            else {
+                item.projectId = document.getElementById('parent').value;
+                if (!data.projects.some(project => project.id === item.projectId)) {
+                    alert('소속 프로젝트를 선택하세요.');
+                    return;
+                }
+            }
+
+            if (attachmentDraft.changed || previous?.images !== undefined) item.images = attachmentDraft.images;
+            if (attachmentDraft.changed || previous?.imagesPending) item.imagesPending = true;
+            if (editing) collection[index] = item;
+            else collection.push(item);
+
+            try {
+                persist({ ...data, [key]: collection });
+            } catch (error) {
+                alert('저장 실패 · ' + saveErrorMessage(error));
+                return;
+            }
+            closeForm();
+            render();
+            showToast(editing ? '수정되었습니다.' : '등록되었습니다.');
+        }
+
+        function deleteItem() {
+            if (!editing) return;
+            let isP = formType === 'project';
+            let msg = isP ? '프로젝트와 모든 하위 업무를 삭제할까요?' : '해당 하위 업무를 삭제할까요?';
+            if (!confirm(msg)) return;
+
+            const next = isP
+                ? { ...data, projects: data.projects.filter(x => x.id !== editing), tasks: data.tasks.filter(x => x.projectId !== editing) }
+                : { ...data, tasks: data.tasks.filter(x => x.id !== editing) };
+            try {
+                persist(next);
+            } catch (error) {
+                alert('삭제 실패 · ' + saveErrorMessage(error));
+                return;
+            }
+            closeForm();
+            render();
+            showToast('삭제되었습니다.');
+        }
+
+        // 현재 스크롤 위치의 셀/막대를 캔버스에 그려 단일 페이지 PDF로 저장합니다.
+        // 한글은 브라우저 글꼴로 렌더링하므로 별도 서버/글꼴 다운로드가 필요 없습니다.
+        async function downloadGanttPdf() {
+            const button = document.getElementById('downloadPdfBtn');
+            button.disabled = true;
+            try {
+                await document.fonts.ready;
+                const gantt = document.getElementById('gantt');
+                const bounds = gantt.getBoundingClientRect();
+                const width = gantt.clientWidth, height = gantt.clientHeight;
+                const canvas = document.createElement('canvas');
+                const scale = 2;
+                canvas.width = Math.ceil(width * scale);
+                canvas.height = Math.ceil((height + 76) * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.scale(scale, scale);
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height + 76);
+                ctx.fillStyle = '#182438'; ctx.font = 'bold 15px "Malgun Gothic", sans-serif';
+                ctx.fillText('간트차트 ' + document.getElementById('period').textContent, 12, 23);
+                ctx.font = '11px "Malgun Gothic", sans-serif'; ctx.fillStyle = '#64748b';
+                ctx.fillText('현재 화면 기준 · ' + iso(new Date()) + ' · 만든사람 YOUNGSUB JI', 12, height + 63);
+                ctx.save(); ctx.beginPath(); ctx.rect(0, 38, width, height); ctx.clip();
+                const rectOf = el => { const r=el.getBoundingClientRect(); return {x:r.left-bounds.left,y:r.top-bounds.top+38,w:r.width,h:r.height}; };
+                function paintBox(el, text) {
+                    const r=rectOf(el), style=getComputedStyle(el);
+                    if(r.x+r.w<=0 || r.x>=width || r.y+r.h<=38 || r.y>=height+38) return;
+                    ctx.save(); ctx.beginPath(); ctx.rect(r.x,r.y,r.w,r.h); ctx.clip();
+                    ctx.fillStyle=style.backgroundColor; ctx.fillRect(r.x,r.y,r.w,r.h);
+                    ctx.strokeStyle=style.borderRightColor; ctx.lineWidth=1; ctx.strokeRect(r.x,r.y,r.w,r.h);
+                    if(el.classList.contains('today')) {ctx.fillStyle='#f97316';ctx.fillRect(r.x,r.y,2,r.h);}
+                    if(text) {
+                        ctx.font=style.font; ctx.fillStyle=style.color; ctx.textBaseline='middle';
+                        const pad=8, max=r.w-pad*2;
+                        let label=text;
+                        if(ctx.measureText(label).width>max) {while(label.length && ctx.measureText(label+'…').width>max) label=label.slice(0,-1);label+='…';}
+                        ctx.fillText(label,r.x+pad,r.y+r.h/2);
+                    }
+                    ctx.restore();
+                }
+                // 화면과 같은 순서로 배경, 막대, 고정 제목, 날짜, 왼쪽 위를 그립니다.
+                gantt.querySelectorAll('.barcell').forEach(el=>paintBox(el));
+                gantt.querySelectorAll('.bar').forEach(el=>paintBox(el,el.textContent));
+                gantt.querySelectorAll('.sticky:not(.corner)').forEach(el=>{
+                    paintBox(el);
+                    const r=rectOf(el), name=el.querySelector('.name'), chip=el.querySelector('.progress-chip');
+                    ctx.save();ctx.beginPath();ctx.rect(r.x,r.y,r.w,r.h);ctx.clip();
+                    if(name) {
+                        const nr=rectOf(name);ctx.fillStyle=getComputedStyle(name).color;ctx.font=getComputedStyle(name).font;ctx.textBaseline='middle';
+                        let label=name.textContent;while(label.length && ctx.measureText(label).width>nr.w) label=label.slice(0,-1);
+                        ctx.fillText(label,nr.x,nr.y+nr.h/2);
+                    }
+                    if(chip) {const cr=rectOf(chip);ctx.font=getComputedStyle(chip).font;ctx.fillStyle='#64748b';ctx.fillText(chip.textContent,cr.x,cr.y+cr.h/2);}
+                    ctx.restore();
+                });
+                gantt.querySelectorAll('.dayhead').forEach(el=>{
+                    paintBox(el);
+                    const r=rectOf(el);ctx.save();ctx.beginPath();ctx.rect(r.x,r.y,r.w,r.h);ctx.clip();
+                    el.querySelectorAll('span').forEach(span=>{
+                        const sr=rectOf(span),style=getComputedStyle(span);ctx.font=style.font;ctx.fillStyle=style.color;
+                        ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(span.textContent,sr.x+sr.w/2,sr.y+sr.h/2);
+                    });ctx.restore();
+                });
+                gantt.querySelectorAll('.corner').forEach(el=>paintBox(el,el.textContent));
+                const empty=gantt.querySelector('.empty'); if(empty) paintBox(empty,empty.textContent);
+                ctx.restore();
+                const jpeg=Uint8Array.from(atob(canvas.toDataURL('image/jpeg',0.95).split(',')[1]),c=>c.charCodeAt(0));
+                const pageWidth=841.89, pageHeight=pageWidth*canvas.height/canvas.width;
+                const encoder=new TextEncoder(), chunks=[], offsets=[0];let length=0;
+                const push=value=>{const bytes=typeof value==='string'?encoder.encode(value):value;chunks.push(bytes);length+=bytes.length;};
+                const object=(id,body)=>{offsets[id]=length;push(id+' 0 obj\n'+body+'\nendobj\n');};
+                push('%PDF-1.4\n');
+                object(1,'<< /Type /Catalog /Pages 2 0 R >>');
+                object(2,'<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+                object(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`);
+                offsets[4]=length;push(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`);push(jpeg);push('\nendstream\nendobj\n');
+                const content=`q ${pageWidth} 0 0 ${pageHeight} 0 0 cm /Im0 Do Q`;
+                object(5,`<< /Length ${encoder.encode(content).length} >>\nstream\n${content}\nendstream`);
+                const xref=length;push('xref\n0 6\n0000000000 65535 f \n');
+                for(let i=1;i<=5;i++) push(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
+                push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+                const blob=new Blob(chunks,{type:'application/pdf'}), url=URL.createObjectURL(blob), a=document.createElement('a');
+                a.href=url;a.download='gantt_'+iso(new Date())+'.pdf';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+                showToast('현재 보이는 간트차트를 PDF로 다운로드했습니다.');
+            } catch(error) {showToast('PDF 다운로드 실패: '+error.message,true);}
+            finally {button.disabled=false;}
+        }
+
+        function exportData() {
+            const backup = withoutPendingImages(data);
+            let blob = new Blob([JSON.stringify({ ...backup, exportedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `project_dashboard_backup_${iso(new Date())}.json`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }
+
+        function importData(e) {
+            let f = e.target.files?.[0];
+            if (!f) return;
+            let reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    let obj = JSON.parse(reader.result);
+                    if (!Array.isArray(obj?.projects) || !Array.isArray(obj?.tasks)) throw Error('올바른 백업 형식이 아닙니다');
+                    for (let p of obj.projects) {
+                        if (!p.id || !p.name || !p.owner || !/^\d{4}-\d{2}-\d{2}$/.test(p.start) || !/^\d{4}-\d{2}-\d{2}$/.test(p.end)) {
+                            throw Error('프로젝트 데이터가 올바르지 않습니다');
+                        }
+                    }
+                    for (let t of obj.tasks) {
+                        if (!t.id || !t.name || !t.owner || !obj.projects.some(p => p.id === t.projectId) || !/^\d{4}-\d{2}-\d{2}$/.test(t.start) || !/^\d{4}-\d{2}-\d{2}$/.test(t.end)) {
+                            throw Error('하위 업무 데이터가 올바르지 않습니다');
+                        }
+                    }
+                    validateAttachments(obj);
+                    if (confirm('현재 데이터를 백업 파일로 교체할까요? 설정에 따라 구글 드라이브에도 반영됩니다.')) {
+                        const restore = (items, current) => {
+                            const currentById = new Map(current.map(item => [item.id, item]));
+                            return items.map(({ images, imagesPending, ...item }) => {
+                                const prior = currentById.get(item.id);
+                                if (images?.length || prior?.images?.length || prior?.imagesPending) {
+                                    return { ...item, images: images || [], imagesPending: true };
+                                }
+                                return item;
+                            });
+                        };
+                        persist({ projects: restore(obj.projects, data.projects), tasks: restore(obj.tasks, data.tasks) });
+                        render();
+                        showToast('데이터 복원이 완료되었습니다.');
+                    }
+                } catch (err) {
+                    alert('복원 실패 · ' + saveErrorMessage(err));
+                }
+                e.target.value = '';
+            };
+            reader.readAsText(f);
+        }
+
+        // -------------------------------------------------------------
+        // 초기화 및 이벤트 리스너
+        // -------------------------------------------------------------
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || event.isComposing || event.repeat) return;
+            if (document.getElementById('attachmentPreview').open) return;
+            if (document.getElementById('driveModal').classList.contains('show')) {
+                event.preventDefault();
+                closeDriveModal();
+            } else if (document.getElementById('modal').classList.contains('show')) {
+                event.preventDefault();
+                closeForm();
+            }
+        });
+
+        document.getElementById('addProjectBtn').addEventListener('click', () => openForm('project'));
+        document.getElementById('addTaskBtn').addEventListener('click', () => openForm('task'));
+        document.getElementById('gasCodeText').value = GAS_TEMPLATE_CODE;
+        document.getElementById('gantt').addEventListener('click', event => {
+            const target = event.target.closest('[data-edit-id]');
+            if (target) openForm(target.dataset.editType, target.dataset.editId);
+        });
+        document.getElementById('imageFiles').addEventListener('change', addAttachments);
+        document.getElementById('attachmentList').addEventListener('click', handleAttachmentClick);
+        document.getElementById('attachmentPreview').addEventListener('close', () => {
+            document.getElementById('attachmentPreviewImage').removeAttribute('src');
+        });
+
+        window.addEventListener('error', event => {
+            const box = document.getElementById('runtimeNotice');
+            if (box) {
+                box.hidden = false;
+                box.textContent = '화면 동작 중 오류가 발생했습니다. 데이터를 JSON으로 백업한 뒤 이 파일을 다시 열어주세요. 오류: ' + (event.message || '알 수 없음');
+            }
+            console.error('Dashboard error', event.error || event.message);
+        });
+
+        // 초기 구글 드라이브 상태 표시 및 최신 데이터 로드
+        if (gdConfig.mode === 'file') {
+            setCloudStatus('offline', '로컬 드라이브 파일 연결 필요');
+        } else if (gdConfig.gasUrl) {
+            setCloudStatus('synced', `구글 드라이브 연동됨 ${gdConfig.lastSync ? '(' + gdConfig.lastSync + ')' : ''}`);
+            if (pendingCloudSave) { if (gdConfig.autoSync !== false) syncToGoogleDrive(); }
+            else loadFromGoogleDrive(false);
+        } else {
+            setCloudStatus('offline', '구글 드라이브 미연동');
+        }
+
+        render();
+    </script>
 </body>
+
 </html>
